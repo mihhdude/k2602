@@ -1,13 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Moon, Sun, Globe } from "lucide-react"
+import { Moon, Sun, Globe, Copy } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useLanguage } from "./language-provider"
 import { LoginDialog } from "./login-dialog"
 import { useAuth } from "@/hooks/use-auth"
+import { useToast } from "@/components/ui/use-toast"
 
 export function Header() {
   const { theme, setTheme } = useTheme()
@@ -15,6 +16,15 @@ export function Header() {
   const { isAdmin, logout } = useAuth()
   const [supportOpen, setSupportOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const { toast } = useToast()
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText("48387831")
+    toast({
+      description: "ID đã được sao chép!",
+      duration: 2000,
+    })
+  }
 
   return (
     <header className="border-b sticky top-0 bg-background z-10">
@@ -50,16 +60,16 @@ export function Header() {
 
         <div className="flex items-center space-x-2">
           <Button variant="ghost" size="sm" onClick={() => setSupportOpen(true)} className="text-rose-500">
-            {t("support")}
+            {String(t("support"))}
           </Button>
 
           {isAdmin ? (
             <Button variant="ghost" size="sm" onClick={logout}>
-              {t("logout")}
+              {String(t("logout"))}
             </Button>
           ) : (
             <Button variant="ghost" size="sm" onClick={() => setLoginOpen(true)}>
-              {t("admin")}
+              {String(t("admin"))}
             </Button>
           )}
         </div>
@@ -68,12 +78,30 @@ export function Header() {
       <Dialog open={supportOpen} onOpenChange={setSupportOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("support")}</DialogTitle>
-            <DialogDescription>{t("supportText")}</DialogDescription>
+            <DialogTitle>{String(t("support"))}</DialogTitle>
+            <DialogDescription>{String(t("supportText"))}</DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center p-4">
-            <div className="bg-gray-200 w-48 h-48 flex items-center justify-center">
-              <p className="text-sm text-gray-500">QR Code Placeholder</p>
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-sm font-medium mb-2">Người nhận: Nguyễn Minh Đức</p>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-sm">ID: 48387831</p>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6" 
+                  onClick={handleCopyId}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <img 
+                src="/bank.jpg" 
+                alt="QR Code" 
+                className="w-48 h-48 object-cover rounded-lg"
+              />
             </div>
           </div>
         </DialogContent>
