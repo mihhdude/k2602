@@ -11,6 +11,7 @@ import { More } from "@/components/more"
 import { AdminPanel } from "@/components/admin-panel"
 import { Footer } from "@/components/footer"
 import { useAuth } from "@/hooks/use-auth"
+import { MGEEvent } from './components/mge-event'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("kingdom")
@@ -40,7 +41,12 @@ export default function Home() {
           {activeTab === "kingdom" && <Introduction />}
           {activeTab === "kvk" && <KvKData />}
           {activeTab === "hall" && <HallOfFame />}
-          {activeTab === "events" && <Events />}
+          {activeTab === "events" && (
+            <>
+              <Events />
+              <MGEEvent />
+            </>
+          )}
           {activeTab === "more" && <More />}
           {isAdmin && activeTab === "admin" && <AdminPanel />}
         </div>
