@@ -36,26 +36,26 @@ export function Events() {
     return [
       {
         id: 1,
-        title: "Mightiest Governor - YSS",
+        title: "Mightiest Governor - Cavalry",
         event_type: "MGE",
-        start_date: "2024-03-20",
-        end_date: "2024-03-27",
-        description: "Tranh đấu để giành được tướng Yi Sun-sin. Top 15 người chơi sẽ nhận được tượng tướng."
+        start_date: "2025-03-24",
+        end_date: "2025-03-29",
+        description: "Top 15 người chơi sẽ nhận được tượng tướng."
       },
       {
         id: 2,
         title: "More Than Gems",
         event_type: "MoreThanGems",
-        start_date: "2024-03-15",
-        end_date: "2024-03-17",
+        start_date: "2025-03-29",
+        end_date: "2025-03-30",
         description: "Tiêu Gems để nhận thêm phần thưởng giá trị. Nhận Universal Gold Heads và nhiều phần thưởng khác."
       },
       {
         id: 3,
-        title: "Kingdom vs Kingdom Season 1",
+        title: "Kingdom vs Kingdom Season 12",
         event_type: "KvK",
-        start_date: "2024-04-01",
-        end_date: "2024-04-30",
+        start_date: "2025-03-05",
+        end_date: "2025-04-25",
         description: "Chiến đấu với các kingdom khác để giành vinh quang và phần thưởng. Chuẩn bị quân đội và tài nguyên cho sự kiện lớn này."
       }
     ]
