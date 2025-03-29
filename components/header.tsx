@@ -79,22 +79,21 @@ export function Header() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{String(t("support"))}</DialogTitle>
-            <DialogDescription>{String(t("supportText"))}</DialogDescription>
+            <DialogDescription>
+              {String(t("supportText"))}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 ml-1" 
+                onClick={handleCopyId}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="text-center">
-              <p className="text-sm font-medium mb-2">Người nhận: Nguyễn Minh Đức</p>
-              <div className="flex items-center justify-center gap-2">
-                <p className="text-sm">ID: 48387831</p>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6" 
-                  onClick={handleCopyId}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
+              <p className="text-sm font-medium mb-2">Cảm ơn thống đốc về cốc Coffee!</p>
             </div>
             <div className="flex justify-center">
               <img 
