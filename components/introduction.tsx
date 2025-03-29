@@ -130,7 +130,7 @@ export function Introduction() {
                   </li>
                   <li>ᵛᶰCrazyDude - ID: 48387831 ({t("supportContact") as string})</li>
                   <li>ᵛᶰ Gaara - ID: 55277161</li>
-                  <li>ᴾ 李常傑 - ID: 78507974</li>
+                  <li>ᴮ Pink Cloud - ID: 72097985</li>
                 </ul>
               </div>
             </div>
