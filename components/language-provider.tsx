@@ -160,8 +160,8 @@ const translations: Translations = {
     vi: "Giới thiệu Vương quốc 2602",
   },
   kingdomDescription: {
-    en: "Kingdom 2602 is a powerful and united kingdom in Rise of Kingdoms. Founded in 24-01-2022, our kingdom has grown to become one of the most respected and feared kingdoms in the game.",
-    vi: "Vương quốc 2602 là một vương quốc hùng mạnh và đoàn kết trong Rise of Kingdoms. Được thành lập vào 24-01-2022, vương quốc của chúng ta đã phát triển để trở thành một trong những vương quốc được kính trọng và đáng gờm nhất trong trò chơi.",
+    en: "Kingdom 2602 is a powerful and united kingdom in Rise of Kingdoms. Founded in 20-01-2022, our kingdom has grown to become one of the most respected and feared kingdoms in the game.",
+    vi: "Vương quốc 2602 là một vương quốc hùng mạnh và đoàn kết trong Rise of Kingdoms. Được thành lập vào 20-01-2022, vương quốc của chúng ta đã phát triển để trở thành một trong những vương quốc được kính trọng và đáng gờm nhất trong trò chơi.",
   },
   kingdomPride: {
     en: "We pride ourselves on our strong community, strategic gameplay, and dedication to excellence in Kingdom vs Kingdom events. Our leadership structure ensures fair play and maximum participation from all members.",
