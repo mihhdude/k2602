@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ChangeEvent } from "react"
 import { Check, ChevronsUpDown, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -69,7 +69,7 @@ export function KvKDataFilter({ onDataTypeChange, onSearch }: KvKDataFilterProps
                 <CommandItem
                   key={type.value}
                   value={type.value}
-                  onSelect={(currentValue) => {
+                  onSelect={(currentValue: string) => {
                     setValue(currentValue)
                     onDataTypeChange(currentValue)
                     setOpen(false)
@@ -93,7 +93,7 @@ export function KvKDataFilter({ onDataTypeChange, onSearch }: KvKDataFilterProps
         type="search"
         placeholder={String(t("searchById"))}
         className="w-[200px]"
-        onChange={(e) => onSearch(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => onSearch(e.target.value)}
       />
       <Button variant="outline" size="icon">
         <Search className="h-4 w-4" />
