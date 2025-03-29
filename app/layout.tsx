@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { LanguageProvider } from "@/components/language-provider"
 import { AuthProvider } from "@/hooks/use-auth"
 import { Toaster } from "@/components/toaster"
+import { Footer } from "@/components/footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -66,7 +67,10 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <LanguageProvider>
-              {children}
+              <div className="min-h-screen flex flex-col">
+                {children}
+                <Footer />
+              </div>
               <Toaster />
             </LanguageProvider>
           </AuthProvider>
