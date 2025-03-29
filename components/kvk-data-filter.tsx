@@ -24,7 +24,7 @@ interface KvKDataFilterProps {
 
 export function KvKDataFilter({ onDataTypeChange, onSearch }: KvKDataFilterProps) {
   const [open, setOpen] = useState(false)
-  const [value, setValue] = useState("")
+  const [value, setValue] = useState("dataStart")
   const { t } = useLanguage()
 
   const dataTypes = [

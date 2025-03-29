@@ -19,7 +19,7 @@ interface PlayerData {
 }
 
 export function KvKData() {
-  const [selectedDataType, setSelectedDataType] = useState("")
+  const [selectedDataType, setSelectedDataType] = useState("dataStart")
   const [searchId, setSearchId] = useState("")
   const { data, isLoading } = useKvkData(selectedDataType)
 
