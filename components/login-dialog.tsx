@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, FormEvent } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,7 +20,11 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  const handleLogin = () => {
+  const handleLogin = (e?: FormEvent) => {
+    if (e) {
+      e.preventDefault()
+    }
+    
     // Simple client-side validation
     if (!username || !password) {
       setError("Please enter both username and password")
@@ -42,22 +46,34 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("login")}</DialogTitle>
+          <DialogTitle>{String(t("login"))}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <form onSubmit={handleLogin} className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="username">{t("username")}</Label>
-            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin" />
+            <Label htmlFor="username">{String(t("username"))}</Label>
+            <Input 
+              id="username" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
+              placeholder="admin"
+              autoComplete="username"
+            />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password">{t("password")}</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Label htmlFor="password">{String(t("password"))}</Label>
+            <Input 
+              id="password" 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              autoComplete="current-password"
+            />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
-        </div>
-        <div className="flex justify-end">
-          <Button onClick={handleLogin}>{t("login")}</Button>
-        </div>
+          <div className="flex justify-end">
+            <Button type="submit">{String(t("login"))}</Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   )
