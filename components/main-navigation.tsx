@@ -33,14 +33,20 @@ export function MainNavigation({ activeTab, onTabChange }: MainNavigationProps) 
 
   return (
     <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-lg shadow-md">
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className={cn(
+        "grid gap-2",
+        isAdmin 
+          ? "grid-cols-3 sm:grid-cols-6" // Khi có admin tab, giữ nguyên layout cũ
+          : "grid-cols-2 sm:grid-cols-5" // Khi không có admin tab, điều chỉnh số cột để giãn đều
+      )}>
         {tabs.map((tab) => (
           <Button
             key={tab.id}
             variant={activeTab === tab.id ? "default" : "outline"}
-            className={`${
-              activeTab === tab.id ? "bg-blue-600 border-blue-700" : "bg-white dark:bg-gray-800"
-            } text-xs sm:text-sm px-2 sm:px-4 flex items-center justify-center shadow-sm`}
+            className={cn(
+              activeTab === tab.id ? "bg-blue-600 border-blue-700" : "bg-white dark:bg-gray-800",
+              "text-xs sm:text-sm px-2 sm:px-4 flex items-center justify-center shadow-sm w-full"
+            )}
             onClick={() => onTabChange(tab.id)}
           >
             {tab.icon}
