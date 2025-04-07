@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Header } from "@/components/header"
 import { MainNavigation } from "@/components/main-navigation"
 import { Introduction } from "@/components/introduction"
 import { KvKData } from "@/components/kvk-data"
@@ -9,7 +8,6 @@ import { HallOfFame } from "@/components/hall-of-fame"
 import { Events } from "@/components/events"
 import { More } from "@/components/more"
 import { AdminPanel } from "@/components/admin-panel"
-import { Footer } from "@/components/footer"
 import { useAuth } from "@/hooks/use-auth"
 
 export default function Home() {
@@ -29,23 +27,19 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-2 sm:px-4 pb-6">
-        <div className="my-4">
-          <MainNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
+    <div className="flex flex-col">
+      <div className="my-4">
+        <MainNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
 
-        <div className="mt-6">
-          {activeTab === "kingdom" && <Introduction />}
-          {activeTab === "kvk" && <KvKData />}
-          {activeTab === "hall" && <HallOfFame />}
-          {activeTab === "events" && <Events />}
-          {activeTab === "more" && <More />}
-          {isAdmin && activeTab === "admin" && <AdminPanel />}
-        </div>
-      </main>
-      <Footer />
+      <div className="mt-6">
+        {activeTab === "kingdom" && <Introduction />}
+        {activeTab === "kvk" && <KvKData />}
+        {activeTab === "hall" && <HallOfFame />}
+        {activeTab === "events" && <Events />}
+        {activeTab === "more" && <More />}
+        {isAdmin && activeTab === "admin" && <AdminPanel />}
+      </div>
     </div>
   )
 }

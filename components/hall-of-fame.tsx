@@ -5,9 +5,11 @@ import { SubNavigation } from "./sub-navigation"
 import { useLanguage } from "./language-provider"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Card, CardContent } from "@/components/ui/card"
-import { Trophy, Search, Medal, Crown, Award, Loader2, UserCheck, BarChart4 } from "lucide-react"
+import { Trophy, Search, Medal, Crown, Award, Loader2, UserCheck, BarChart4, Edit2, Save, X } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
 import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
@@ -41,11 +43,11 @@ interface KpiData {
   governor_id: string
   governor_name: string
   kp_increase: number
-  deads_increase: number
   kpi_percentage: number
   kp_percentage?: number
-  deads_percentage?: number
   kp_target?: number
+  total_deads?: number
+  deads_percentage?: number
   deads_target?: number
 }
 
@@ -83,6 +85,8 @@ export function HallOfFame() {
   const [kpiData, setKpiData] = useState<KpiData[]>([])
   const [loading, setLoading] = useState(true)
   const [resultsData, setResultsData] = useState<KpiData[]>([])
+  const [editingPlayer, setEditingPlayer] = useState<string | null>(null)
+  const [editTotalDeads, setEditTotalDeads] = useState<string>("")
 
   const subTabs = [
     { id: "top3", label: String(t("top3")), icon: <Crown className="h-4 w-4 mr-2" /> },
@@ -142,31 +146,23 @@ export function HallOfFame() {
         // Calculate total kill points (sum of all increases)
         const totalKp = pass4Increase + pass7Increase + kinglandIncrease
 
-        // Calculate dead increases
-        const pass4DeadIncrease = pass4Player ? pass4Player.deads - startPlayer.deads : 0
-        const pass7DeadIncrease = pass7Player && pass4Player ? pass7Player.deads - pass4Player.deads : 0
-        const kinglandDeadIncrease = kinglandPlayer && pass7Player ? kinglandPlayer.deads - pass7Player.deads : 0
-
-        // Calculate total deads (sum of all increases)
-        const totalDeads = pass4DeadIncrease + pass7DeadIncrease + kinglandDeadIncrease
-
         // Calculate KPI target based on power
-        let kpiDeadTarget = 0
+        let deadsTarget = 0
         const power = startPlayer.power
 
-        if (power >= 100000000) kpiDeadTarget = 1500000
-        else if (power >= 90000000) kpiDeadTarget = 1100000
-        else if (power >= 80000000) kpiDeadTarget = 850000
-        else if (power >= 70000000) kpiDeadTarget = 700000
-        else if (power >= 60000000) kpiDeadTarget = 600000
-        else if (power >= 50000000) kpiDeadTarget = 500000
-        else if (power >= 40000000) kpiDeadTarget = 400000
-        else if (power >= 30000000) kpiDeadTarget = 300000
-        else if (power >= 20000000) kpiDeadTarget = 200000
-        else kpiDeadTarget = 100000
+        if (power >= 100000000) deadsTarget = 1500000
+        else if (power >= 90000000) deadsTarget = 1100000
+        else if (power >= 80000000) deadsTarget = 850000
+        else if (power >= 70000000) deadsTarget = 700000
+        else if (power >= 60000000) deadsTarget = 600000
+        else if (power >= 50000000) deadsTarget = 500000
+        else if (power >= 40000000) deadsTarget = 400000
+        else if (power >= 30000000) deadsTarget = 300000
+        else if (power >= 20000000) deadsTarget = 200000
+        else deadsTarget = 0
 
         // If player is zeroed, set KPI to 0
-        if (status && status.zeroed) kpiDeadTarget = 0
+        if (status && status.zeroed) deadsTarget = 0
 
         // Calculate KPI percentage
         // KP target is 3x power
@@ -174,21 +170,21 @@ export function HallOfFame() {
 
         // Calculate percentages
         const kpPercentage = (totalKp / kpTarget) * 100
-        const deadsPercentage = (totalDeads / kpiDeadTarget) * 100
+        const deadsPercentage = kinglandPlayer?.total_deads ? (kinglandPlayer.total_deads / deadsTarget) * 100 : 0
 
-        // Total KPI percentage is the sum of both
+        // Total KPI percentage is sum of KP percentage and Dead percentage
         const kpiPercentage = kpPercentage + deadsPercentage
 
         totalResults.push({
           governor_id: startPlayer.governor_id,
           governor_name: startPlayer.governor_name,
           kp_increase: totalKp,
-          deads_increase: totalDeads,
           kpi_percentage: kpiPercentage,
           kp_percentage: kpPercentage,
-          deads_percentage: deadsPercentage,
           kp_target: kpTarget,
-          deads_target: kpiDeadTarget,
+          total_deads: kinglandPlayer?.total_deads || 0,
+          deads_percentage: deadsPercentage,
+          deads_target: deadsTarget,
         })
       }
 
@@ -212,7 +208,7 @@ export function HallOfFame() {
             governor_name: player.governor_name,
             power: fullData?.power || 0,
             kill_points: player.kp_increase, // Use the total KP increase
-            deads: player.deads_increase || 0,
+            deads: 0,
             t1_kills: fullData?.t1_kills || 0,
             t2_kills: fullData?.t2_kills || 0,
             t3_kills: fullData?.t3_kills || 0,
@@ -301,25 +297,24 @@ export function HallOfFame() {
 
           // Calculate increases
           const kpIncrease = currentPlayer.kill_points - previousPlayer.kill_points
-          const deadsIncrease = currentPlayer.deads - previousPlayer.deads
 
           // Calculate KPI target based on power from dataStart
-          let kpiDeadTarget = 0
+          let deadsTarget = 0
           const power = startPlayer.power // Use power from dataStart
 
-          if (power >= 100000000) kpiDeadTarget = 1500000
-          else if (power >= 90000000) kpiDeadTarget = 1100000
-          else if (power >= 80000000) kpiDeadTarget = 850000
-          else if (power >= 70000000) kpiDeadTarget = 700000
-          else if (power >= 60000000) kpiDeadTarget = 600000
-          else if (power >= 50000000) kpiDeadTarget = 500000
-          else if (power >= 40000000) kpiDeadTarget = 400000
-          else if (power >= 30000000) kpiDeadTarget = 300000
-          else if (power >= 20000000) kpiDeadTarget = 200000
-          else kpiDeadTarget = 100000
+          if (power >= 100000000) deadsTarget = 1500000
+          else if (power >= 90000000) deadsTarget = 1100000
+          else if (power >= 80000000) deadsTarget = 850000
+          else if (power >= 70000000) deadsTarget = 700000
+          else if (power >= 60000000) deadsTarget = 600000
+          else if (power >= 50000000) deadsTarget = 500000
+          else if (power >= 40000000) deadsTarget = 400000
+          else if (power >= 30000000) deadsTarget = 300000
+          else if (power >= 20000000) deadsTarget = 200000
+          else deadsTarget = 0
 
           // If player is zeroed, set KPI to 0
-          if (status && status.zeroed) kpiDeadTarget = 0
+          if (status && status.zeroed) deadsTarget = 0
 
           // Calculate KPI percentage
           // KP target is 3x power from dataStart
@@ -327,21 +322,21 @@ export function HallOfFame() {
 
           // Calculate percentages
           const kpPercentage = (kpIncrease / kpTarget) * 100
-          const deadsPercentage = (deadsIncrease / kpiDeadTarget) * 100
+          const deadsPercentage = currentPlayer.total_deads ? (currentPlayer.total_deads / deadsTarget) * 100 : 0
 
-          // Total KPI percentage is the sum of both
+          // Total KPI percentage is sum of KP percentage and Dead percentage
           const kpiPercentage = kpPercentage + deadsPercentage
 
           kpiResults.push({
             governor_id: currentPlayer.governor_id,
             governor_name: currentPlayer.governor_name,
             kp_increase: kpIncrease,
-            deads_increase: deadsIncrease,
             kpi_percentage: kpiPercentage,
             kp_percentage: kpPercentage,
-            deads_percentage: deadsPercentage,
             kp_target: kpTarget,
-            deads_target: kpiDeadTarget,
+            total_deads: currentPlayer.total_deads || 0,
+            deads_percentage: deadsPercentage,
+            deads_target: deadsTarget,
           })
         }
 
@@ -413,31 +408,23 @@ export function HallOfFame() {
         // Calculate total kill points (sum of all increases)
         const totalKp = pass4Increase + pass7Increase + kinglandIncrease
 
-        // Calculate dead increases
-        const pass4DeadIncrease = pass4Player ? pass4Player.deads - startPlayer.deads : 0
-        const pass7DeadIncrease = pass7Player && pass4Player ? pass7Player.deads - pass4Player.deads : 0
-        const kinglandDeadIncrease = kinglandPlayer && pass7Player ? kinglandPlayer.deads - pass7Player.deads : 0
-
-        // Calculate total deads (sum of all increases)
-        const totalDeads = pass4DeadIncrease + pass7DeadIncrease + kinglandDeadIncrease
-
         // Calculate KPI target based on power
-        let kpiDeadTarget = 0
+        let deadsTarget = 0
         const power = startPlayer.power
 
-        if (power >= 100000000) kpiDeadTarget = 1500000
-        else if (power >= 90000000) kpiDeadTarget = 1100000
-        else if (power >= 80000000) kpiDeadTarget = 850000
-        else if (power >= 70000000) kpiDeadTarget = 700000
-        else if (power >= 60000000) kpiDeadTarget = 600000
-        else if (power >= 50000000) kpiDeadTarget = 500000
-        else if (power >= 40000000) kpiDeadTarget = 400000
-        else if (power >= 30000000) kpiDeadTarget = 300000
-        else if (power >= 20000000) kpiDeadTarget = 200000
-        else kpiDeadTarget = 100000
+        if (power >= 100000000) deadsTarget = 1500000
+        else if (power >= 90000000) deadsTarget = 1100000
+        else if (power >= 80000000) deadsTarget = 850000
+        else if (power >= 70000000) deadsTarget = 700000
+        else if (power >= 60000000) deadsTarget = 600000
+        else if (power >= 50000000) deadsTarget = 500000
+        else if (power >= 40000000) deadsTarget = 400000
+        else if (power >= 30000000) deadsTarget = 300000
+        else if (power >= 20000000) deadsTarget = 200000
+        else deadsTarget = 0
 
         // If player is zeroed, set KPI to 0
-        if (status && status.zeroed) kpiDeadTarget = 0
+        if (status && status.zeroed) deadsTarget = 0
 
         // Calculate KPI percentage
         // KP target is 3x power
@@ -445,21 +432,21 @@ export function HallOfFame() {
 
         // Calculate percentages
         const kpPercentage = (totalKp / kpTarget) * 100
-        const deadsPercentage = (totalDeads / kpiDeadTarget) * 100
+        const deadsPercentage = kinglandPlayer?.total_deads ? (kinglandPlayer.total_deads / deadsTarget) * 100 : 0
 
-        // Total KPI percentage is the sum of both
+        // Total KPI percentage is sum of KP percentage and Dead percentage
         const kpiPercentage = kpPercentage + deadsPercentage
 
         totalResults.push({
           governor_id: startPlayer.governor_id,
           governor_name: startPlayer.governor_name,
           kp_increase: totalKp,
-          deads_increase: totalDeads,
           kpi_percentage: kpiPercentage,
           kp_percentage: kpPercentage,
-          deads_percentage: deadsPercentage,
           kp_target: kpTarget,
-          deads_target: kpiDeadTarget,
+          total_deads: kinglandPlayer?.total_deads || 0,
+          deads_percentage: deadsPercentage,
+          deads_target: deadsTarget,
         })
       }
 
@@ -483,7 +470,7 @@ export function HallOfFame() {
             governor_name: player.governor_name,
             power: fullData?.power || 0,
             kill_points: player.kp_increase, // Use the total KP increase
-            deads: player.deads_increase || 0,
+            deads: 0,
             t1_kills: fullData?.t1_kills || 0,
             t2_kills: fullData?.t2_kills || 0,
             t3_kills: fullData?.t3_kills || 0,
@@ -500,6 +487,40 @@ export function HallOfFame() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleEditClick = (player: KpiData) => {
+    setEditingPlayer(player.governor_id)
+    setEditTotalDeads(player.total_deads?.toString() || "0")
+  }
+
+  const handleSaveClick = async (player: KpiData) => {
+    try {
+      // Update the player's total_deads in the database
+      const { error } = await supabase
+        .from("player_data")
+        .update({ total_deads: parseInt(editTotalDeads) || 0 })
+        .eq("governor_id", player.governor_id)
+        .eq("phase", "dataKingland")
+
+      if (error) throw error
+
+      // Update local state
+      const updatedData = kpiData.map((p) =>
+        p.governor_id === player.governor_id
+          ? { ...p, total_deads: parseInt(editTotalDeads) || 0 }
+          : p
+      )
+      setKpiData(updatedData)
+      setEditingPlayer(null)
+    } catch (error) {
+      console.error("Error updating total_deads:", error)
+    }
+  }
+
+  const handleCancelClick = () => {
+    setEditingPlayer(null)
+    setEditTotalDeads("")
   }
 
   return (
@@ -632,7 +653,7 @@ export function HallOfFame() {
                       <TableHead className="text-right">Total Kill Points</TableHead>
                       <TableHead className="text-right">Total Deads</TableHead>
                       <TableHead className="text-right">KP %</TableHead>
-                      <TableHead className="text-right">Deads %</TableHead>
+                      <TableHead className="text-right">Dead %</TableHead>
                       <TableHead className="text-right">KPI %</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -644,7 +665,7 @@ export function HallOfFame() {
                           <TableCell>{row.governor_name}</TableCell>
                           <TableCell>{row.governor_id}</TableCell>
                           <TableCell className="text-right">{row.kp_increase.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">{row.deads_increase.toLocaleString()}</TableCell>
+                          <TableCell className="text-right">{row.total_deads?.toLocaleString() || 0}</TableCell>
                           <TableCell className="text-right">
                             <span
                               className={cn(
@@ -659,7 +680,7 @@ export function HallOfFame() {
                             <span
                               className={cn(
                                 "font-bold",
-                                (row.deads_percentage || 0) >= 50 ? "text-green-500" : "text-red-500"
+                                (row.deads_percentage || 0) >= 100 ? "text-green-500" : "text-red-500"
                               )}
                             >
                               {(row.deads_percentage || 0).toFixed(1)}%
@@ -669,7 +690,7 @@ export function HallOfFame() {
                             <span
                               className={cn(
                                 "font-bold",
-                                (row.kpi_percentage || 0) >= 200 ? "text-green-500" : "text-red-500"
+                                (row.kpi_percentage || 0) >= 50 ? "text-green-500" : "text-red-500"
                               )}
                             >
                               {(row.kpi_percentage || 0).toFixed(1)}%
@@ -679,12 +700,8 @@ export function HallOfFame() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-4">
-                          <div className="flex flex-col items-center justify-center py-8">
-                            <Trophy className="h-8 w-8 text-gray-400 mb-2" />
-                            <p>No data available</p>
-                            <p className="text-sm text-gray-500">Upload data in the Admin panel</p>
-                          </div>
+                        <TableCell colSpan={8} className="text-center">
+                          No data available
                         </TableCell>
                       </TableRow>
                     )}
@@ -724,11 +741,8 @@ export function HallOfFame() {
                       <TableHead>Governor Name</TableHead>
                       <TableHead>Governor ID</TableHead>
                       <TableHead className="text-right">KP Increase</TableHead>
-                      <TableHead className="text-right">Deads Increase</TableHead>
                       <TableHead className="text-right">KPI KP</TableHead>
-                      <TableHead className="text-right">KPI Dead</TableHead>
                       <TableHead className="text-right">KP %</TableHead>
-                      <TableHead className="text-right">Deads %</TableHead>
                       <TableHead className="text-right">KPI %</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -740,9 +754,7 @@ export function HallOfFame() {
                           <TableCell>{row.governor_name}</TableCell>
                           <TableCell>{row.governor_id}</TableCell>
                           <TableCell className="text-right">{row.kp_increase.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">{row.deads_increase.toLocaleString()}</TableCell>
                           <TableCell className="text-right">{row.kp_target?.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">{row.deads_target?.toLocaleString()}</TableCell>
                           <TableCell className="text-right">
                             <span
                               className={cn(
@@ -757,17 +769,7 @@ export function HallOfFame() {
                             <span
                               className={cn(
                                 "font-bold",
-                                (row.deads_percentage || 0) >= 50 ? "text-green-500" : "text-red-500"
-                              )}
-                            >
-                              {(row.deads_percentage || 0).toFixed(1)}%
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <span
-                              className={cn(
-                                "font-bold",
-                                (row.kpi_percentage || 0) >= 200 ? "text-green-500" : "text-red-500"
+                                (row.kpi_percentage || 0) >= 50 ? "text-green-500" : "text-red-500"
                               )}
                             >
                               {(row.kpi_percentage || 0).toFixed(1)}%
@@ -777,12 +779,8 @@ export function HallOfFame() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={10} className="text-center py-4">
-                          <div className="flex flex-col items-center justify-center py-8">
-                            <Trophy className="h-8 w-8 text-gray-400 mb-2" />
-                            <p>No data available</p>
-                            <p className="text-sm text-gray-500">Upload data in the Admin panel</p>
-                          </div>
+                        <TableCell colSpan={8} className="text-center">
+                          No data available
                         </TableCell>
                       </TableRow>
                     )}

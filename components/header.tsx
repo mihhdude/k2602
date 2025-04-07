@@ -1,14 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { Moon, Sun, Globe, Copy } from "lucide-react"
+import { Moon, Sun, Globe, Copy, Settings } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useLanguage } from "./language-provider"
 import { LoginDialog } from "./login-dialog"
 import { useAuth } from "@/hooks/use-auth"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 export function Header() {
   const { theme, setTheme } = useTheme()
@@ -17,6 +18,7 @@ export function Header() {
   const [supportOpen, setSupportOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleCopyId = () => {
     navigator.clipboard.writeText("48387831")
@@ -34,21 +36,19 @@ export function Header() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="h-8 w-8"
-            aria-label="Toggle theme"
+            className="border rounded-full p-2 hover:bg-accent"
           >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
 
           <Button
             variant="ghost"
             size="icon"
+            className="border rounded-full p-2 hover:bg-accent"
             onClick={() => setLanguage(language === "en" ? "vi" : "en")}
-            className="h-8 w-8"
-            aria-label="Toggle language"
           >
-            <Globe className="h-4 w-4" />
+            {language === "en" ? "VI" : "EN"}
           </Button>
         </div>
 
@@ -59,16 +59,31 @@ export function Header() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" onClick={() => setSupportOpen(true)} className="text-rose-500">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSupportOpen(true)} 
+            className="border rounded-full px-4 py-2 hover:bg-accent text-rose-500"
+          >
             {String(t("support"))}
           </Button>
 
           {isAdmin ? (
-            <Button variant="ghost" size="sm" onClick={logout}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={logout}
+              className="border rounded-full px-4 py-2 hover:bg-accent"
+            >
               {String(t("logout"))}
             </Button>
           ) : (
-            <Button variant="ghost" size="sm" onClick={() => setLoginOpen(true)}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setLoginOpen(true)}
+              className="border rounded-full px-4 py-2 hover:bg-accent"
+            >
               {String(t("admin"))}
             </Button>
           )}

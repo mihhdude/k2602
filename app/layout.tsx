@@ -6,13 +6,14 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { LanguageProvider } from "@/components/language-provider"
 import { AuthProvider } from "@/hooks/use-auth"
 import { Toaster } from "@/components/toaster"
-import { Footer } from "@/components/footer"
+import { Footer } from "@/app/components/footer"
+import { Header } from "@/components/header"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "K2602 - Kingdom 2602",
-  description: "Kingdom 2602 KvK data reporting tool",
+  description: "Công cụ báo cáo dữ liệu KvK của Kingdom 2602",
   icons: {
     icon: "/2602-logo.png",
   },
@@ -20,10 +21,10 @@ export const metadata: Metadata = {
   authors: [{ name: 'Kingdom 2602' }],
   creator: 'Kingdom 2602',
   publisher: 'Kingdom 2602',
-  keywords: ['Kingdom 2602', 'KvK', 'ROK'],
+  keywords: ['Kingdom 2602', 'KvK', 'ROK', 'Rise of Kingdoms'],
   openGraph: {
     title: 'K2602 - Kingdom 2602',
-    description: 'Kingdom 2602 KvK data reporting tool',
+    description: 'Công cụ báo cáo dữ liệu KvK của Kingdom 2602',
     siteName: 'Kingdom 2602',
     locale: 'vi_VN',
     type: 'website',
@@ -40,12 +41,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/2602-logo.png" sizes="any" />
         <link rel="icon" type="image/png" href="/2602-logo.png" />
         <link rel="apple-touch-icon" href="/2602-logo.png" />
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#0f172a" />
         <meta name="copyright" content="© 2025 Kingdom 2602. All rights reserved." />
         <script dangerouslySetInnerHTML={{
           __html: `
@@ -63,12 +64,15 @@ export default function RootLayout({
           `
         }} />
       </head>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <LanguageProvider>
-              <div className="min-h-screen flex flex-col">
-                {children}
+              <div className="flex min-h-screen flex-col bg-background">
+                <Header />
+                <main className="flex-1 container mx-auto px-4 py-6">
+                  {children}
+                </main>
                 <Footer />
               </div>
               <Toaster />

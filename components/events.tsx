@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { createClient } from "@supabase/supabase-js"
 import { useLanguage } from "./language-provider"
 import { useAuth } from "@/hooks/use-auth"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
@@ -138,58 +139,159 @@ export function Events() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold flex items-center">
-          <Calendar className="h-6 w-6 mr-2 text-blue-500" />
-          Sự kiện
-        </h1>
-      </div>
+    <div className="w-full p-4">
+      <Tabs defaultValue="mge" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="mge">MGE</TabsTrigger>
+          <TabsTrigger value="gems">Tiêu Gem</TabsTrigger>
+          <TabsTrigger value="other">Event Khác</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="mge" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {events
+              .filter(event => event.event_type === "MGE")
+              .map((event) => (
+                <Card key={event.id}>
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    {getEventIcon(event.event_type)}
+                    <div>
+                      <CardTitle className="text-lg">{event.title}</CardTitle>
+                      <CardDescription className="text-sm">
+                        {event.event_type}
+                      </CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {event.description}
+                      </p>
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm">
+                          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>Bắt đầu: {formatDate(event.start_date)}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>Kết thúc: {formatDate(event.end_date)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="gems" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {events
+              .filter(event => event.event_type === "MoreThanGems")
+              .map((event) => (
+                <Card key={event.id}>
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    {getEventIcon(event.event_type)}
+                    <div>
+                      <CardTitle className="text-lg">{event.title}</CardTitle>
+                      <CardDescription className="text-sm">
+                        {event.event_type}
+                      </CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {event.description}
+                      </p>
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm">
+                          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>Bắt đầu: {formatDate(event.start_date)}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>Kết thúc: {formatDate(event.end_date)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="other" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {events
+              .filter(event => !["MGE", "MoreThanGems"].includes(event.event_type))
+              .map((event) => (
+                <Card key={event.id}>
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    {getEventIcon(event.event_type)}
+                    <div>
+                      <CardTitle className="text-lg">{event.title}</CardTitle>
+                      <CardDescription className="text-sm">
+                        {event.event_type}
+                      </CardDescription>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {event.description}
+                      </p>
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm">
+                          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>Bắt đầu: {formatDate(event.start_date)}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>Kết thúc: {formatDate(event.end_date)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
 
-      {events.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Calendar className="h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Chưa có sự kiện nào</h3>
-          {isAdmin && (
-            <p className="text-sm text-gray-500">
-              Bạn có thể thêm sự kiện mới trong tab Quản trị
-            </p>
-          )}
+interface EventCardProps {
+  title: string
+  type: string
+  description: string
+  startDate: string
+  endDate: string
+  icon: string
+}
+
+function EventCard({ title, type, description, startDate, endDate, icon }: EventCardProps) {
+  return (
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-2xl">{icon}</span>
+        <div>
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <p className="text-sm text-muted-foreground">{type}</p>
         </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
-            <Card key={event.id}>
-              <CardHeader className="flex flex-row items-center gap-4">
-                {getEventIcon(event.event_type)}
-                <div>
-                  <CardTitle className="text-lg">{event.title}</CardTitle>
-                  <CardDescription className="text-sm">
-                    {event.event_type}
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {event.description}
-                  </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>Bắt đầu: {formatDate(event.start_date)}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>Kết thúc: {formatDate(event.end_date)}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      </div>
+      <p className="text-sm text-muted-foreground mb-4">{description}</p>
+      <div className="flex flex-col gap-1 text-sm">
+        <div className="flex items-center gap-2">
+          <span>Bắt đầu:</span>
+          <span className="text-muted-foreground">{startDate}</span>
         </div>
-      )}
+        <div className="flex items-center gap-2">
+          <span>Kết thúc:</span>
+          <span className="text-muted-foreground">{endDate}</span>
+        </div>
+      </div>
     </div>
   )
 }

@@ -231,6 +231,38 @@ const translations: Translations = {
     en: "On Leave",
     vi: "Nghỉ phép",
   },
+  uploadDescription: {
+    en: "Upload Excel data for different KvK phases",
+    vi: "Tải lên dữ liệu Excel cho các giai đoạn KvK",
+  },
+  selectPhase: {
+    en: "Select Phase",
+    vi: "Chọn giai đoạn",
+  },
+  selectFile: {
+    en: "Select Excel File",
+    vi: "Chọn tệp Excel",
+  },
+  uploading: {
+    en: "Uploading...",
+    vi: "Đang tải lên...",
+  },
+  readyToUpload: {
+    en: "Ready to Upload",
+    vi: "Sẵn sàng tải lên",
+  },
+  status: {
+    en: "Status",
+    vi: "Trạng thái",
+  },
+  updating: {
+    en: "Updating...",
+    vi: "Đang cập nhật...",
+  },
+  updateStatus: {
+    en: "Update Status",
+    vi: "Cập nhật trạng thái",
+  },
 }
 
 export interface LanguageContextType {
