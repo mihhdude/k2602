@@ -50,7 +50,6 @@ interface KpiData {
   deads_percentage?: number
   deads_target?: number
   is_kpi_achieved: boolean
-  kpi_reduction: number
 }
 
 // Thêm keyframes animation cho top 1 vào đầu file, sau phần imports:
@@ -113,9 +112,6 @@ export function HallOfFame() {
       // Get all phases data
       const { data: startData } = await supabase.from("player_data").select("*").eq("phase", "dataStart")
 
-      // Get KPI reductions
-      const { data: kpiReductions } = await supabase.from("kpi_reductions").select("*")
-
       if (!startData || !playerStatuses) {
         setResultsData([])
         setLoading(false)
@@ -142,10 +138,6 @@ export function HallOfFame() {
         const pass7Player = pass7Data?.find((p: PlayerData) => p.governor_id === startPlayer.governor_id)
         const kinglandPlayer = kinglandData?.find((p: PlayerData) => p.governor_id === startPlayer.governor_id)
 
-        // Find KPI reduction if any
-        const kpiReduction = kpiReductions?.find((r) => r.governor_id === startPlayer.governor_id)
-        const reductionMultiplier = kpiReduction ? (100 - kpiReduction.reduction_percentage) / 100 : 1
-
         // Calculate increases for each phase (use 0 if phase data is missing)
         const pass4Increase = pass4Player ? pass4Player.kill_points - startPlayer.kill_points : 0
         const pass7Increase = pass7Player && pass4Player ? pass7Player.kill_points - pass4Player.kill_points : 0
@@ -153,7 +145,7 @@ export function HallOfFame() {
           kinglandPlayer && pass7Player ? kinglandPlayer.kill_points - pass7Player.kill_points : 0
 
         // Calculate total kill points (sum of all increases)
-        const totalKp = (pass4Increase + pass7Increase + kinglandIncrease) * reductionMultiplier
+        const totalKp = pass4Increase + pass7Increase + kinglandIncrease
 
         // Calculate KPI target based on power
         let deadsTarget = 0
@@ -179,10 +171,7 @@ export function HallOfFame() {
 
         // Calculate percentages
         const kpPercentage = (totalKp / kpTarget) * 100
-        
-        // Áp dụng hệ số giảm vào total_deads
-        const adjustedTotalDeads = kinglandPlayer?.total_deads ? kinglandPlayer.total_deads * reductionMultiplier : 0
-        const deadsPercentage = adjustedTotalDeads ? (adjustedTotalDeads / deadsTarget) * 100 : 0
+        const deadsPercentage = kinglandPlayer?.total_deads ? (kinglandPlayer.total_deads / deadsTarget) * 100 : 0
 
         // Total KPI percentage is sum of KP percentage and Dead percentage
         const kpiPercentage = kpPercentage + deadsPercentage
@@ -197,11 +186,10 @@ export function HallOfFame() {
           kpi_percentage: kpiPercentage,
           kp_percentage: kpPercentage,
           kp_target: kpTarget,
-          total_deads: adjustedTotalDeads,
+          total_deads: kinglandPlayer?.total_deads || 0,
           deads_percentage: deadsPercentage,
           deads_target: deadsTarget,
-          is_kpi_achieved: isKpiAchieved,
-          kpi_reduction: kpiReduction ? kpiReduction.reduction_percentage : 0
+          is_kpi_achieved: isKpiAchieved
         })
       }
 
@@ -357,8 +345,7 @@ export function HallOfFame() {
             total_deads: currentPlayer.total_deads || 0,
             deads_percentage: deadsPercentage,
             deads_target: deadsTarget,
-            is_kpi_achieved: isKpiAchieved,
-            kpi_reduction: 0
+            is_kpi_achieved: isKpiAchieved
           })
         }
 
@@ -394,9 +381,6 @@ export function HallOfFame() {
       // Get all phases data
       const { data: startData } = await supabase.from("player_data").select("*").eq("phase", "dataStart")
 
-      // Get KPI reductions
-      const { data: kpiReductions } = await supabase.from("kpi_reductions").select("*")
-
       const { data: pass4Data } = await supabase.from("player_data").select("*").eq("phase", "dataPass4")
 
       const { data: pass7Data } = await supabase.from("player_data").select("*").eq("phase", "dataPass7")
@@ -424,10 +408,6 @@ export function HallOfFame() {
         const pass7Player = pass7Data?.find((p: PlayerData) => p.governor_id === startPlayer.governor_id)
         const kinglandPlayer = kinglandData?.find((p: PlayerData) => p.governor_id === startPlayer.governor_id)
 
-        // Find KPI reduction if any
-        const kpiReduction = kpiReductions?.find((r) => r.governor_id === startPlayer.governor_id)
-        const reductionMultiplier = kpiReduction ? (100 - kpiReduction.reduction_percentage) / 100 : 1
-
         // Calculate increases for each phase (use 0 if phase data is missing)
         const pass4Increase = pass4Player ? pass4Player.kill_points - startPlayer.kill_points : 0
         const pass7Increase = pass7Player && pass4Player ? pass7Player.kill_points - pass4Player.kill_points : 0
@@ -435,7 +415,7 @@ export function HallOfFame() {
           kinglandPlayer && pass7Player ? kinglandPlayer.kill_points - pass7Player.kill_points : 0
 
         // Calculate total kill points (sum of all increases)
-        const totalKp = (pass4Increase + pass7Increase + kinglandIncrease) * reductionMultiplier
+        const totalKp = pass4Increase + pass7Increase + kinglandIncrease
 
         // Calculate KPI target based on power
         let deadsTarget = 0
@@ -461,10 +441,7 @@ export function HallOfFame() {
 
         // Calculate percentages
         const kpPercentage = (totalKp / kpTarget) * 100
-        
-        // Áp dụng hệ số giảm vào total_deads
-        const adjustedTotalDeads = kinglandPlayer?.total_deads ? kinglandPlayer.total_deads * reductionMultiplier : 0
-        const deadsPercentage = adjustedTotalDeads ? (adjustedTotalDeads / deadsTarget) * 100 : 0
+        const deadsPercentage = kinglandPlayer?.total_deads ? (kinglandPlayer.total_deads / deadsTarget) * 100 : 0
 
         // Total KPI percentage is sum of KP percentage and Dead percentage
         const kpiPercentage = kpPercentage + deadsPercentage
@@ -479,11 +456,10 @@ export function HallOfFame() {
           kpi_percentage: kpiPercentage,
           kp_percentage: kpPercentage,
           kp_target: kpTarget,
-          total_deads: adjustedTotalDeads,
+          total_deads: kinglandPlayer?.total_deads || 0,
           deads_percentage: deadsPercentage,
           deads_target: deadsTarget,
-          is_kpi_achieved: isKpiAchieved,
-          kpi_reduction: kpiReduction ? kpiReduction.reduction_percentage : 0
+          is_kpi_achieved: isKpiAchieved
         })
       }
 
@@ -692,7 +668,6 @@ export function HallOfFame() {
                       <TableHead className="text-right">KP %</TableHead>
                       <TableHead className="text-right">Dead %</TableHead>
                       <TableHead className="text-right">KPI %</TableHead>
-                      <TableHead className="text-right">KPI Reduction</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -734,20 +709,11 @@ export function HallOfFame() {
                               {(row.kpi_percentage || 0).toFixed(1)}%
                             </span>
                           </TableCell>
-                          <TableCell className="text-right">
-                            {row.kpi_reduction > 0 ? (
-                              <span className="font-bold text-red-500">
-                                -{row.kpi_reduction.toFixed(1)}%
-                              </span>
-                            ) : (
-                              <span className="text-gray-500">-</span>
-                            )}
-                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center">
+                        <TableCell colSpan={8} className="text-center">
                           No data available
                         </TableCell>
                       </TableRow>
