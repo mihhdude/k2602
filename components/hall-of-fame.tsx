@@ -49,6 +49,7 @@ interface KpiData {
   total_deads?: number
   deads_percentage?: number
   deads_target?: number
+  is_kpi_achieved: boolean
 }
 
 // Thêm keyframes animation cho top 1 vào đầu file, sau phần imports:
@@ -175,6 +176,9 @@ export function HallOfFame() {
         // Total KPI percentage is sum of KP percentage and Dead percentage
         const kpiPercentage = kpPercentage + deadsPercentage
 
+        // Kiểm tra điều kiện đạt KPI
+        const isKpiAchieved = kpPercentage >= 50 && kpiPercentage >= 200
+
         totalResults.push({
           governor_id: startPlayer.governor_id,
           governor_name: startPlayer.governor_name,
@@ -185,6 +189,7 @@ export function HallOfFame() {
           total_deads: kinglandPlayer?.total_deads || 0,
           deads_percentage: deadsPercentage,
           deads_target: deadsTarget,
+          is_kpi_achieved: isKpiAchieved
         })
       }
 
@@ -327,6 +332,9 @@ export function HallOfFame() {
           // Total KPI percentage is sum of KP percentage and Dead percentage
           const kpiPercentage = kpPercentage + deadsPercentage
 
+          // Kiểm tra điều kiện đạt KPI
+          const isKpiAchieved = kpPercentage >= 50 && kpiPercentage >= 200
+
           kpiResults.push({
             governor_id: currentPlayer.governor_id,
             governor_name: currentPlayer.governor_name,
@@ -337,6 +345,7 @@ export function HallOfFame() {
             total_deads: currentPlayer.total_deads || 0,
             deads_percentage: deadsPercentage,
             deads_target: deadsTarget,
+            is_kpi_achieved: isKpiAchieved
           })
         }
 
@@ -437,6 +446,9 @@ export function HallOfFame() {
         // Total KPI percentage is sum of KP percentage and Dead percentage
         const kpiPercentage = kpPercentage + deadsPercentage
 
+        // Kiểm tra điều kiện đạt KPI
+        const isKpiAchieved = kpPercentage >= 50 && kpiPercentage >= 200
+
         totalResults.push({
           governor_id: startPlayer.governor_id,
           governor_name: startPlayer.governor_name,
@@ -447,6 +459,7 @@ export function HallOfFame() {
           total_deads: kinglandPlayer?.total_deads || 0,
           deads_percentage: deadsPercentage,
           deads_target: deadsTarget,
+          is_kpi_achieved: isKpiAchieved
         })
       }
 
@@ -690,7 +703,7 @@ export function HallOfFame() {
                             <span
                               className={cn(
                                 "font-bold",
-                                (row.kpi_percentage || 0) >= 200 ? "text-green-500" : "text-red-500"
+                                row.is_kpi_achieved ? "text-green-500" : "text-red-500"
                               )}
                             >
                               {(row.kpi_percentage || 0).toFixed(1)}%
