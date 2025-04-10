@@ -491,6 +491,7 @@ export function AdminPanel() {
       if (error) throw error
 
       if (data) {
+        // Giảm KPI cho KP và Dead theo tỷ lệ phần trăm người dùng nhập
         const newPower = data.power * (1 - parseFloat(kpiReductionPercentage) / 100)
         const newKillPoints = data.kill_points * (1 - parseFloat(kpiReductionPercentage) / 100)
         const newDeads = data.deads * (1 - parseFloat(kpiReductionPercentage) / 100)
