@@ -115,6 +115,9 @@ export function HallOfFame() {
       // Get all phases data
       const { data: startData } = await supabase.from("player_data").select("*").eq("phase", "dataStart")
 
+      // Get KPI reductions
+      const { data: kpiReductions } = await supabase.from("kpi_reductions").select("*")
+
       if (!startData || !playerStatuses) {
         setResultsData([])
         setLoading(false)
@@ -168,9 +171,18 @@ export function HallOfFame() {
         // If player is zeroed, set KPI to 0
         if (status && status.zeroed) deadsTarget = 0
 
-        // Calculate KPI percentage
+        // Calculate KPI target
         // KP target is 3x power
-        const kpTarget = startPlayer.power * 3
+        let kpTarget = startPlayer.power * 3
+
+        // Find KPI reduction if exists
+        const reduction = kpiReductions?.find((r) => r.governor_id === startPlayer.governor_id)
+        if (reduction) {
+          // Apply reduction percentage to both KP and Deads target
+          const reductionMultiplier = (100 - reduction.reduction_percentage) / 100
+          kpTarget = Math.floor(kpTarget * reductionMultiplier)
+          deadsTarget = Math.floor(deadsTarget * reductionMultiplier)
+        }
 
         // Calculate percentages
         const kpPercentage = (totalKp / kpTarget) * 100
@@ -215,7 +227,7 @@ export function HallOfFame() {
             governor_id: player.governor_id,
             governor_name: player.governor_name,
             power: fullData?.power || 0,
-            kill_points: player.kp_increase, // Use the total KP increase
+            kill_points: player.kp_increase,
             deads: 0,
             t1_kills: fullData?.t1_kills || 0,
             t2_kills: fullData?.t2_kills || 0,
@@ -681,12 +693,12 @@ export function HallOfFame() {
                   />
                   <Search className="h-4 w-4 absolute left-2 top-3 text-gray-400" />
                 </div>
-                {isAdmin && (
+                {
                   <Button onClick={handleExportExcel} className="flex items-center gap-2">
                     <Download className="h-4 w-4" />
                     Xuất Excel
                   </Button>
-                )}
+                }
               </div>
 
               <div className="overflow-x-auto">

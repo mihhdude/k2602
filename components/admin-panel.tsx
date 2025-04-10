@@ -89,9 +89,9 @@ export function AdminPanel() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [totalDeads, setTotalDeads] = useState("")
   const [totalDeadsGovernorId, setTotalDeadsGovernorId] = useState("")
-  const [kpiTargetGovernorId, setKpiTargetGovernorId] = useState("")
-  const [kpTargetReduction, setKpTargetReduction] = useState("0")
-  const [deadsTargetReduction, setDeadsTargetReduction] = useState("0")
+  const [kpiReductionGovernorId, setKpiReductionGovernorId] = useState("")
+  const [reductionPercentage, setReductionPercentage] = useState("0")
+  const [reductionReason, setReductionReason] = useState("")
 
   const subTabs = [
     {
@@ -432,9 +432,9 @@ export function AdminPanel() {
     }
   }
 
-  // Sửa lại hàm xử lý cập nhật KPI target
-  const handleKpiTargetUpdate = async () => {
-    if (!kpiTargetGovernorId) {
+  // Sửa lại hàm xử lý cập nhật KPI reduction
+  const handleKpiReductionUpdate = async () => {
+    if (!kpiReductionGovernorId) {
       toast({
         title: "Lỗi",
         description: "Vui lòng nhập Governor ID",
@@ -443,10 +443,9 @@ export function AdminPanel() {
       return
     }
 
-    const kpReduction = parseFloat(kpTargetReduction)
-    const deadsReduction = parseFloat(deadsTargetReduction)
+    const reduction = parseFloat(reductionPercentage)
 
-    if (isNaN(kpReduction) || isNaN(deadsReduction)) {
+    if (isNaN(reduction)) {
       toast({
         title: "Lỗi",
         description: "Phần trăm giảm phải là số",
@@ -455,7 +454,7 @@ export function AdminPanel() {
       return
     }
 
-    if (kpReduction < 0 || kpReduction > 100 || deadsReduction < 0 || deadsReduction > 100) {
+    if (reduction < 0 || reduction > 100) {
       toast({
         title: "Lỗi",
         description: "Phần trăm giảm phải nằm trong khoảng 0-100%",
@@ -467,11 +466,11 @@ export function AdminPanel() {
     setIsUpdating(true)
 
     try {
-      // Kiểm tra người chơi có tồn tại không
+      // Kiểm tra người chơi có tồn tại không và lấy thông tin
       const { data: player, error: checkError } = await supabase
         .from("player_data")
-        .select("power")
-        .eq("governor_id", kpiTargetGovernorId)
+        .select("power, governor_name")
+        .eq("governor_id", kpiReductionGovernorId)
         .eq("phase", "dataStart")
         .single()
 
@@ -479,14 +478,15 @@ export function AdminPanel() {
         throw new Error("Không tìm thấy người chơi")
       }
 
-      // Cập nhật KPI target
+      // Cập nhật KPI reduction
       const { error: updateError } = await supabase
-        .from("kpi_targets")
-        .upsert({
-          governor_id: kpiTargetGovernorId,
-          kp_target_reduction: kpReduction,
-          deads_target_reduction: deadsReduction,
-          updated_at: new Date().toISOString(),
+        .from("kpi_reductions")
+        .insert({
+          governor_id: kpiReductionGovernorId,
+          governor_name: player.governor_name,
+          reduction_percentage: reduction,
+          reason: reductionReason || null,
+          power_at_reduction: player.power
         })
 
       if (updateError) {
@@ -500,14 +500,14 @@ export function AdminPanel() {
       })
 
       // Reset form
-      setKpiTargetGovernorId("")
-      setKpTargetReduction("0")
-      setDeadsTargetReduction("0")
+      setKpiReductionGovernorId("")
+      setReductionPercentage("0")
+      setReductionReason("")
     } catch (error) {
-      console.error("Error updating KPI target:", error)
+      console.error("Error updating KPI reduction:", error)
       toast({
         title: "Lỗi",
-        description: error instanceof Error ? error.message : "Không thể cập nhật KPI target",
+        description: error instanceof Error ? error.message : "Không thể cập nhật KPI reduction",
         variant: "destructive",
       })
     } finally {
@@ -812,50 +812,42 @@ export function AdminPanel() {
             <CardDescription>Điều chỉnh phần trăm giảm KPI target cho người chơi</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={(e) => { e.preventDefault(); handleKpiTargetUpdate(); }} className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleKpiReductionUpdate(); }} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="kpiTargetGovernorId">Governor ID</Label>
+                <Label htmlFor="kpiReductionGovernorId">Governor ID</Label>
                 <Input
-                  id="kpiTargetGovernorId"
-                  value={kpiTargetGovernorId}
-                  onChange={(e) => setKpiTargetGovernorId(e.target.value)}
+                  id="kpiReductionGovernorId"
+                  value={kpiReductionGovernorId}
+                  onChange={(e) => setKpiReductionGovernorId(e.target.value)}
                   placeholder="Nhập Governor ID"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="kpTargetReduction">Phần trăm giảm KP Target (%)</Label>
+                <Label htmlFor="reductionPercentage">Phần trăm giảm KPI Target (%)</Label>
                 <Input
-                  id="kpTargetReduction"
+                  id="reductionPercentage"
                   type="number"
                   min="0"
                   max="100"
                   step="0.1"
-                  value={kpTargetReduction}
-                  onChange={(e) => setKpTargetReduction(e.target.value)}
-                  placeholder="Nhập phần trăm giảm KP target"
+                  value={reductionPercentage}
+                  onChange={(e) => setReductionPercentage(e.target.value)}
+                  placeholder="Nhập phần trăm giảm KPI target"
                   required
                 />
                 <p className="text-xs text-gray-500">
-                  KP Target mới = KP Target gốc × (1 - Phần trăm giảm/100)
+                  KPI Target mới = KPI Target gốc × (1 - Phần trăm giảm/100)
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deadsTargetReduction">Phần trăm giảm Deads Target (%)</Label>
+                <Label htmlFor="reductionReason">Lý do giảm (không bắt buộc)</Label>
                 <Input
-                  id="deadsTargetReduction"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={deadsTargetReduction}
-                  onChange={(e) => setDeadsTargetReduction(e.target.value)}
-                  placeholder="Nhập phần trăm giảm Deads target"
-                  required
+                  id="reductionReason"
+                  value={reductionReason}
+                  onChange={(e) => setReductionReason(e.target.value)}
+                  placeholder="Nhập lý do giảm KPI target"
                 />
-                <p className="text-xs text-gray-500">
-                  Deads Target mới = Deads Target gốc × (1 - Phần trăm giảm/100)
-                </p>
               </div>
               <Button type="submit" disabled={isUpdating}>
                 {isUpdating ? "Đang cập nhật..." : "Cập nhật"}
