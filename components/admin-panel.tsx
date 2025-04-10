@@ -479,6 +479,56 @@ export function AdminPanel() {
     }
   }
 
+  const updateKpiData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("player_data")
+        .select("*")
+        .eq("governor_id", kpiReductionGovernorId)
+        .eq("phase", "dataStart")
+
+      if (error) throw error
+
+      setPlayerData(data || [])
+    } catch (error) {
+      console.error("Error updating KPI data:", error)
+    }
+  }
+
+  const recalculateMetrics = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("player_data")
+        .select("*")
+        .eq("governor_id", kpiReductionGovernorId)
+        .eq("phase", "dataStart")
+        .single()
+
+      if (error) throw error
+
+      if (data) {
+        const newPower = data.power * (1 - parseFloat(kpiReductionPercentage) / 100)
+        const newKillPoints = data.kill_points * (1 - parseFloat(kpiReductionPercentage) / 100)
+        const newDeads = data.deads * (1 - parseFloat(kpiReductionPercentage) / 100)
+
+        await supabase
+          .from("player_data")
+          .update({
+            power: newPower,
+            kill_points: newKillPoints,
+            deads: newDeads,
+          })
+          .eq("governor_id", kpiReductionGovernorId)
+          .eq("phase", "dataStart")
+
+        // Tải lại dữ liệu mới
+        await updateKpiData()
+      }
+    } catch (error) {
+      console.error("Error recalculating metrics:", error)
+    }
+  }
+
   const handleKpiReduction = async () => {
     if (!kpiReductionGovernorId || !kpiReductionPercentage) {
       toast({
@@ -530,6 +580,9 @@ export function AdminPanel() {
         description: "Đã giảm KPI cho người chơi",
         variant: "default",
       })
+
+      // Tính toán lại các chỉ số
+      await recalculateMetrics()
 
       // Reset form
       setKpiReductionGovernorId("")
