@@ -25,6 +25,7 @@ import {
   Users,
   FileText,
   Swords,
+  Target,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@supabase/supabase-js"
@@ -88,6 +89,9 @@ export function AdminPanel() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [totalDeads, setTotalDeads] = useState("")
   const [totalDeadsGovernorId, setTotalDeadsGovernorId] = useState("")
+  const [kpiTargetGovernorId, setKpiTargetGovernorId] = useState("")
+  const [kpTargetReduction, setKpTargetReduction] = useState("0")
+  const [deadsTargetReduction, setDeadsTargetReduction] = useState("0")
 
   const subTabs = [
     {
@@ -104,6 +108,11 @@ export function AdminPanel() {
       id: "manageDeads",
       label: "Quản lý Total Deads",
       icon: <Swords className="h-4 w-4" />,
+    },
+    {
+      id: "manageKpiTarget",
+      label: "Quản lý KPI Target",
+      icon: <Target className="h-4 w-4" />,
     },
   ]
 
@@ -423,6 +432,89 @@ export function AdminPanel() {
     }
   }
 
+  // Sửa lại hàm xử lý cập nhật KPI target
+  const handleKpiTargetUpdate = async () => {
+    if (!kpiTargetGovernorId) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập Governor ID",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const kpReduction = parseFloat(kpTargetReduction)
+    const deadsReduction = parseFloat(deadsTargetReduction)
+
+    if (isNaN(kpReduction) || isNaN(deadsReduction)) {
+      toast({
+        title: "Lỗi",
+        description: "Phần trăm giảm phải là số",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (kpReduction < 0 || kpReduction > 100 || deadsReduction < 0 || deadsReduction > 100) {
+      toast({
+        title: "Lỗi",
+        description: "Phần trăm giảm phải nằm trong khoảng 0-100%",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUpdating(true)
+
+    try {
+      // Kiểm tra người chơi có tồn tại không
+      const { data: player, error: checkError } = await supabase
+        .from("player_data")
+        .select("power")
+        .eq("governor_id", kpiTargetGovernorId)
+        .eq("phase", "dataStart")
+        .single()
+
+      if (checkError) {
+        throw new Error("Không tìm thấy người chơi")
+      }
+
+      // Cập nhật KPI target
+      const { error: updateError } = await supabase
+        .from("kpi_targets")
+        .upsert({
+          governor_id: kpiTargetGovernorId,
+          kp_target_reduction: kpReduction,
+          deads_target_reduction: deadsReduction,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (updateError) {
+        throw updateError
+      }
+
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật phần trăm giảm KPI target",
+        variant: "default",
+      })
+
+      // Reset form
+      setKpiTargetGovernorId("")
+      setKpTargetReduction("0")
+      setDeadsTargetReduction("0")
+    } catch (error) {
+      console.error("Error updating KPI target:", error)
+      toast({
+        title: "Lỗi",
+        description: error instanceof Error ? error.message : "Không thể cập nhật KPI target",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <SubNavigation tabs={subTabs} activeTab={activeSubTab} setActiveTab={setActiveSubTab} />
@@ -706,6 +798,69 @@ export function AdminPanel() {
                 </form>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeSubTab === "manageKpiTarget" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Target className="h-5 w-5 mr-2" />
+              Quản lý KPI Target
+            </CardTitle>
+            <CardDescription>Điều chỉnh phần trăm giảm KPI target cho người chơi</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={(e) => { e.preventDefault(); handleKpiTargetUpdate(); }} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="kpiTargetGovernorId">Governor ID</Label>
+                <Input
+                  id="kpiTargetGovernorId"
+                  value={kpiTargetGovernorId}
+                  onChange={(e) => setKpiTargetGovernorId(e.target.value)}
+                  placeholder="Nhập Governor ID"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="kpTargetReduction">Phần trăm giảm KP Target (%)</Label>
+                <Input
+                  id="kpTargetReduction"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={kpTargetReduction}
+                  onChange={(e) => setKpTargetReduction(e.target.value)}
+                  placeholder="Nhập phần trăm giảm KP target"
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  KP Target mới = KP Target gốc × (1 - Phần trăm giảm/100)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="deadsTargetReduction">Phần trăm giảm Deads Target (%)</Label>
+                <Input
+                  id="deadsTargetReduction"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={deadsTargetReduction}
+                  onChange={(e) => setDeadsTargetReduction(e.target.value)}
+                  placeholder="Nhập phần trăm giảm Deads target"
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  Deads Target mới = Deads Target gốc × (1 - Phần trăm giảm/100)
+                </p>
+              </div>
+              <Button type="submit" disabled={isUpdating}>
+                {isUpdating ? "Đang cập nhật..." : "Cập nhật"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       )}

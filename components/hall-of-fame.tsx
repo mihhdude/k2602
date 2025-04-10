@@ -5,11 +5,13 @@ import { SubNavigation } from "./sub-navigation"
 import { useLanguage } from "./language-provider"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Card, CardContent } from "@/components/ui/card"
-import { Trophy, Search, Medal, Crown, Award, Loader2, UserCheck, BarChart4, Edit2, Save, X } from "lucide-react"
+import { Trophy, Search, Medal, Crown, Award, Loader2, UserCheck, BarChart4, Edit2, Save, X, Download } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import * as XLSX from 'xlsx'
+import { useAuth } from "./auth-provider"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
@@ -80,6 +82,7 @@ const shimmerAnimation = `
 
 export function HallOfFame() {
   const { t } = useLanguage()
+  const { isAdmin } = useAuth()
   const [activeSubTab, setActiveSubTab] = useState("top3")
   const [searchId, setSearchId] = useState("")
   const [top3Players, setTop3Players] = useState<PlayerData[]>([])
@@ -536,11 +539,41 @@ export function HallOfFame() {
     setEditTotalDeads("")
   }
 
+  // Thêm hàm xuất Excel
+  const handleExportExcel = () => {
+    if (!resultsData.length) return
+
+    // Tạo workbook mới
+    const wb = XLSX.utils.book_new()
+    
+    // Chuẩn bị dữ liệu cho Excel
+    const excelData = resultsData.map((player, index) => ({
+      'STT': index + 1,
+      'Tên': player.governor_name,
+      'ID': player.governor_id,
+      'Tăng KP': player.kp_increase,
+      'KP Target': player.kp_target,
+      'KP %': player.kp_percentage?.toFixed(2) + '%',
+      'Total Deads': player.total_deads,
+      'Deads Target': player.deads_target,
+      'Deads %': player.deads_percentage?.toFixed(2) + '%',
+      'KPI %': player.kpi_percentage.toFixed(2) + '%',
+      'Đạt KPI': player.is_kpi_achieved ? 'Có' : 'Không'
+    }))
+
+    // Tạo worksheet từ dữ liệu
+    const ws = XLSX.utils.json_to_sheet(excelData)
+
+    // Thêm worksheet vào workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Kết quả')
+
+    // Xuất file Excel
+    XLSX.writeFile(wb, 'ket-qua-kvk.xlsx')
+  }
+
   return (
-    <div>
-      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-4">
-        <SubNavigation tabs={subTabs} activeTab={activeSubTab} setActiveTab={setActiveSubTab} />
-      </div>
+    <div className="space-y-4">
+      <SubNavigation tabs={subTabs} activeTab={activeSubTab} setActiveTab={setActiveSubTab} />
 
       {loading ? (
         <div className="flex justify-center items-center py-8">
@@ -637,8 +670,8 @@ export function HallOfFame() {
           {activeSubTab === "results" && (
             <div className="border rounded-md p-4">
               {/* Add search input */}
-              <div className="mb-4">
-                <div className="relative">
+              <div className="mb-4 flex justify-between items-center">
+                <div className="relative w-64">
                   <input
                     type="text"
                     placeholder="Search by ID or name..."
@@ -648,6 +681,12 @@ export function HallOfFame() {
                   />
                   <Search className="h-4 w-4 absolute left-2 top-3 text-gray-400" />
                 </div>
+                {isAdmin && (
+                  <Button onClick={handleExportExcel} className="flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Xuất Excel
+                  </Button>
+                )}
               </div>
 
               <div className="overflow-x-auto">
