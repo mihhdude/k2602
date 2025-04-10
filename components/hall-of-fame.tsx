@@ -554,8 +554,8 @@ export function HallOfFame() {
                       </div>
                       <h3 className="font-bold text-xl mb-1">{top3Players[1].governor_name}</h3>
                       <p className="text-sm text-gray-500 mb-3">ID: {top3Players[1].governor_id}</p>
-                      <div className="flex items-center gap-2">
-                        <Trophy className="h-5 w-5 text-gray-400" />
+                      <div className="flex items-center justify-center gap-2">
+                        <Trophy className="h-5 w-5 text-gray-400 flex-shrink-0" />
                         <p className="font-semibold">{top3Players[1].kill_points.toLocaleString()} KP</p>
                       </div>
                     </CardContent>
@@ -579,8 +579,8 @@ export function HallOfFame() {
                       </div>
                       <h3 className="font-bold text-2xl mb-1 text-amber-900 dark:text-amber-100">{top3Players[0].governor_name}</h3>
                       <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">ID: {top3Players[0].governor_id}</p>
-                      <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-amber-500 px-4 py-2 rounded-full shadow-lg">
-                        <Trophy className="h-6 w-6 text-yellow-100" />
+                      <div className="flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-amber-500 px-4 py-2 rounded-full shadow-lg">
+                        <Trophy className="h-5 w-5 text-yellow-100 flex-shrink-0" />
                         <p className="font-bold text-white">{top3Players[0].kill_points.toLocaleString()} KP</p>
                       </div>
                     </CardContent>
@@ -602,8 +602,8 @@ export function HallOfFame() {
                       </div>
                       <h3 className="font-bold text-lg mb-1">{top3Players[2].governor_name}</h3>
                       <p className="text-sm text-gray-500 mb-3">ID: {top3Players[2].governor_id}</p>
-                      <div className="flex items-center gap-2">
-                        <Trophy className="h-5 w-5 text-amber-700" />
+                      <div className="flex items-center justify-center gap-2">
+                        <Trophy className="h-5 w-5 text-amber-700 flex-shrink-0" />
                         <p className="font-semibold">{top3Players[2].kill_points.toLocaleString()} KP</p>
                       </div>
                     </CardContent>

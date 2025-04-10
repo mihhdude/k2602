@@ -37,18 +37,18 @@ export function Events() {
     return [
       {
         id: 1,
-        title: "Mightiest Governor - Cavalry",
+        title: "Mightiest Governor - Infantry",
         event_type: "MGE",
-        start_date: "2025-03-24",
-        end_date: "2025-03-29",
+        start_date: "2025-04-07",
+        end_date: "2025-04-12",
         description: "Top 15 người chơi sẽ nhận được tượng tướng."
       },
       {
         id: 2,
         title: "More Than Gems",
         event_type: "MoreThanGems",
-        start_date: "2025-03-29",
-        end_date: "2025-03-30",
+        start_date: "2025-04-12",
+        end_date: "2025-04-13",
         description: "Tiêu Gems để nhận thêm phần thưởng giá trị. Nhận Universal Gold Heads và nhiều phần thưởng khác."
       },
       {
