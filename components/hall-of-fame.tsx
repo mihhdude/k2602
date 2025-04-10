@@ -96,6 +96,10 @@ export function HallOfFame() {
     }).format(num)
   }
 
+  const safeFormatNumber = (num: number | undefined) => {
+    return num !== undefined ? formatNumber(num) : '0'
+  }
+
   const subTabs = [
     { id: "top3", label: String(t("top3")), icon: <Crown className="h-4 w-4 mr-2" /> },
     { id: "pass4", label: String(t("dataPass4")), icon: <Trophy className="h-4 w-4 mr-2" /> },
@@ -564,7 +568,7 @@ export function HallOfFame() {
                       <p className="text-sm text-gray-500 mb-3">ID: {top3Players[1].governor_id}</p>
                       <div className="flex items-center gap-2">
                         <Trophy className="h-5 w-5 text-gray-400" />
-                        <p className="font-semibold">{formatNumber(top3Players[1].kill_points)} KP</p>
+                        <p className="font-semibold">{safeFormatNumber(top3Players[1].kill_points)} KP</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -589,7 +593,7 @@ export function HallOfFame() {
                       <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">ID: {top3Players[0].governor_id}</p>
                       <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-amber-500 px-4 py-2 rounded-full shadow-lg">
                         <Trophy className="h-6 w-6 text-yellow-100" />
-                        <p className="font-bold text-white">{formatNumber(top3Players[0].kill_points)} KP</p>
+                        <p className="font-bold text-white">{safeFormatNumber(top3Players[0].kill_points)} KP</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -612,7 +616,7 @@ export function HallOfFame() {
                       <p className="text-sm text-gray-500 mb-3">ID: {top3Players[2].governor_id}</p>
                       <div className="flex items-center gap-2">
                         <Trophy className="h-5 w-5 text-amber-700" />
-                        <p className="font-semibold">{formatNumber(top3Players[2].kill_points)} KP</p>
+                        <p className="font-semibold">{safeFormatNumber(top3Players[2].kill_points)} KP</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -672,8 +676,8 @@ export function HallOfFame() {
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>{row.governor_name}</TableCell>
                           <TableCell>{row.governor_id}</TableCell>
-                          <TableCell className="text-right">{formatNumber(row.kp_increase)}</TableCell>
-                          <TableCell className="text-right">{formatNumber(row.total_deads)}</TableCell>
+                          <TableCell className="text-right">{safeFormatNumber(row.kp_increase)}</TableCell>
+                          <TableCell className="text-right">{safeFormatNumber(row.total_deads)}</TableCell>
                           <TableCell className="text-right">
                             <span
                               className={cn(
@@ -681,7 +685,7 @@ export function HallOfFame() {
                                 (row.kp_percentage || 0) >= 50 ? "text-green-500" : "text-red-500"
                               )}
                             >
-                              {formatNumber((row.kp_percentage || 0).toFixed(1))}
+                              {safeFormatNumber(parseFloat((row.kp_percentage || 0).toFixed(1)))}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
@@ -691,7 +695,7 @@ export function HallOfFame() {
                                 (row.deads_percentage || 0) >= 100 ? "text-green-500" : "text-red-500"
                               )}
                             >
-                              {formatNumber((row.deads_percentage || 0).toFixed(1))}
+                              {safeFormatNumber(parseFloat((row.deads_percentage || 0).toFixed(1)))}
                             </span>
                           </TableCell>
                           <TableCell className="text-right">
@@ -701,7 +705,7 @@ export function HallOfFame() {
                                 (row.kpi_percentage || 0) >= 200 ? "text-green-500" : "text-red-500"
                               )}
                             >
-                              {formatNumber((row.kpi_percentage || 0).toFixed(1))}
+                              {safeFormatNumber(parseFloat((row.kpi_percentage || 0).toFixed(1)))}
                             </span>
                           </TableCell>
                         </TableRow>
@@ -760,8 +764,8 @@ export function HallOfFame() {
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>{row.governor_name}</TableCell>
                           <TableCell>{row.governor_id}</TableCell>
-                          <TableCell className="text-right">{formatNumber(row.kp_increase)}</TableCell>
-                          <TableCell className="text-right">{formatNumber(row.kp_target)}</TableCell>
+                          <TableCell className="text-right">{safeFormatNumber(row.kp_increase)}</TableCell>
+                          <TableCell className="text-right">{safeFormatNumber(row.kp_target)}</TableCell>
                           <TableCell className="text-right">
                             <span
                               className={cn(
@@ -769,7 +773,7 @@ export function HallOfFame() {
                                 (row.kp_percentage || 0) >= 50 ? "text-green-500" : "text-red-500"
                               )}
                             >
-                              {formatNumber((row.kp_percentage || 0).toFixed(1))}
+                              {safeFormatNumber(parseFloat((row.kp_percentage || 0).toFixed(1)))}
                             </span>
                           </TableCell>
                         </TableRow>
