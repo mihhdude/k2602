@@ -479,22 +479,6 @@ export function AdminPanel() {
     }
   }
 
-  const updateKpiData = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("player_data")
-        .select("*")
-        .eq("governor_id", kpiReductionGovernorId)
-        .eq("phase", "dataStart")
-
-      if (error) throw error
-
-      setPlayerData(data || [])
-    } catch (error) {
-      console.error("Error updating KPI data:", error)
-    }
-  }
-
   const recalculateMetrics = async () => {
     try {
       const { data, error } = await supabase
@@ -522,7 +506,13 @@ export function AdminPanel() {
           .eq("phase", "dataStart")
 
         // Tải lại dữ liệu mới
-        await updateKpiData()
+        const updatedData = await supabase
+          .from("player_data")
+          .select("*")
+          .eq("governor_id", kpiReductionGovernorId)
+          .eq("phase", "dataStart")
+
+        setPlayerData(updatedData.data || [])
       }
     } catch (error) {
       console.error("Error recalculating metrics:", error)
