@@ -179,7 +179,10 @@ export function HallOfFame() {
 
         // Calculate percentages
         const kpPercentage = (totalKp / kpTarget) * 100
-        const deadsPercentage = kinglandPlayer?.total_deads ? (kinglandPlayer.total_deads / deadsTarget) * 100 : 0
+        
+        // Áp dụng hệ số giảm vào total_deads
+        const adjustedTotalDeads = kinglandPlayer?.total_deads ? kinglandPlayer.total_deads * reductionMultiplier : 0
+        const deadsPercentage = adjustedTotalDeads ? (adjustedTotalDeads / deadsTarget) * 100 : 0
 
         // Total KPI percentage is sum of KP percentage and Dead percentage
         const kpiPercentage = kpPercentage + deadsPercentage
@@ -194,7 +197,7 @@ export function HallOfFame() {
           kpi_percentage: kpiPercentage,
           kp_percentage: kpPercentage,
           kp_target: kpTarget,
-          total_deads: kinglandPlayer?.total_deads || 0,
+          total_deads: adjustedTotalDeads,
           deads_percentage: deadsPercentage,
           deads_target: deadsTarget,
           is_kpi_achieved: isKpiAchieved,
@@ -458,7 +461,10 @@ export function HallOfFame() {
 
         // Calculate percentages
         const kpPercentage = (totalKp / kpTarget) * 100
-        const deadsPercentage = kinglandPlayer?.total_deads ? (kinglandPlayer.total_deads / deadsTarget) * 100 : 0
+        
+        // Áp dụng hệ số giảm vào total_deads
+        const adjustedTotalDeads = kinglandPlayer?.total_deads ? kinglandPlayer.total_deads * reductionMultiplier : 0
+        const deadsPercentage = adjustedTotalDeads ? (adjustedTotalDeads / deadsTarget) * 100 : 0
 
         // Total KPI percentage is sum of KP percentage and Dead percentage
         const kpiPercentage = kpPercentage + deadsPercentage
@@ -473,7 +479,7 @@ export function HallOfFame() {
           kpi_percentage: kpiPercentage,
           kp_percentage: kpPercentage,
           kp_target: kpTarget,
-          total_deads: kinglandPlayer?.total_deads || 0,
+          total_deads: adjustedTotalDeads,
           deads_percentage: deadsPercentage,
           deads_target: deadsTarget,
           is_kpi_achieved: isKpiAchieved,

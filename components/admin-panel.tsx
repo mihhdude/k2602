@@ -559,7 +559,7 @@ export function AdminPanel() {
           governor_id: kpiReductionGovernorId,
           governor_name: startData.governor_name,
           reduction_percentage: parseFloat(kpiReductionPercentage),
-          reason: "Admin adjustment", // Lý do mặc định, chỉ admin biết
+          reason: kpiReductionReason || "Admin adjustment", // Sử dụng lý do người dùng nhập hoặc mặc định
           power_at_reduction: startData.power,
           created_at: new Date().toISOString(),
         })
@@ -572,17 +572,58 @@ export function AdminPanel() {
         variant: "default",
       })
 
-      // Tính toán lại các chỉ số
-      await recalculateMetrics()
-
       // Reset form
       setKpiReductionGovernorId("")
       setKpiReductionPercentage("")
+      setKpiReductionReason("")
     } catch (error) {
       console.error("Error reducing KPI:", error)
       toast({
         title: "Lỗi",
         description: "Không thể giảm KPI. Vui lòng thử lại.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleRemoveKpiReduction = async () => {
+    if (!kpiReductionGovernorId) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập Governor ID",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUpdating(true)
+
+    try {
+      // Xóa thông tin giảm KPI từ bảng kpi_reductions
+      const { error: deleteError } = await supabase
+        .from("kpi_reductions")
+        .delete()
+        .eq("governor_id", kpiReductionGovernorId)
+
+      if (deleteError) throw deleteError
+
+      toast({
+        title: "Thành công",
+        description: "Đã bỏ giảm KPI cho người chơi",
+        variant: "default",
+      })
+
+      // Reset form
+      setKpiReductionGovernorId("")
+      setKpiReductionPercentage("")
+      setKpiReductionReason("")
+    } catch (error) {
+      console.error("Error removing KPI reduction:", error)
+      toast({
+        title: "Lỗi",
+        description: "Không thể bỏ giảm KPI. Vui lòng thử lại.",
         variant: "destructive",
       })
     } finally {
@@ -892,7 +933,7 @@ export function AdminPanel() {
                   <div className="grid gap-2">
                     <Label>Giảm KPI cho người chơi</Label>
                     <p className="text-sm text-gray-500">
-                      Chức năng này cho phép giảm KPI cho người chơi được chọn. KPI sẽ được tính dựa trên dữ liệu ban đầu từ phase dataStart.
+                      Chức năng này cho phép giảm KPI ban đầu của người chơi được chọn. KPI sẽ được tính dựa trên dữ liệu ban đầu từ phase dataStart.
                     </p>
                   </div>
                   <form onSubmit={(e) => { e.preventDefault(); handleKpiReduction(); }} className="space-y-4">
@@ -917,9 +958,28 @@ export function AdminPanel() {
                         required
                       />
                     </div>
-                    <Button type="submit" disabled={isUpdating}>
-                      {isUpdating ? "Đang cập nhật..." : "Giảm KPI"}
-                    </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="kpiReductionReason">Lý do giảm KPI</Label>
+                      <Input
+                        id="kpiReductionReason"
+                        value={kpiReductionReason}
+                        onChange={(e) => setKpiReductionReason(e.target.value)}
+                        placeholder="Nhập lý do giảm KPI (tùy chọn)"
+                      />
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button type="submit" disabled={isUpdating}>
+                        {isUpdating ? "Đang cập nhật..." : "Giảm KPI"}
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="destructive" 
+                        onClick={handleRemoveKpiReduction} 
+                        disabled={isUpdating || !kpiReductionGovernorId}
+                      >
+                        {isUpdating ? "Đang xóa..." : "Bỏ giảm KPI"}
+                      </Button>
+                    </div>
                   </form>
                 </div>
               </CardContent>
