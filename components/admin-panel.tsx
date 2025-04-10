@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SubNavigation } from "./sub-navigation"
 import { useLanguage } from "./language-provider"
 import { Button } from "@/components/ui/button"
@@ -25,10 +25,37 @@ import {
   Users,
   FileText,
   Swords,
+  Trophy,
+  Search,
+  Medal,
+  Crown,
+  Award,
+  Loader2,
+  Edit2,
+  Percent,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@supabase/supabase-js"
 import * as XLSX from "xlsx"
+import { cn } from "@/lib/utils"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
+
+// Type definitions
+type PlayerData = {
+  governor_id: string
+  governor_name: string
+  power: number
+  kill_points: number
+  phase: string
+  created_at: string
+}
+
+type PlayerStatus = {
+  governor_id: string
+  governor_name: string
+  status: string
+  created_at: string
+}
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
@@ -88,6 +115,13 @@ export function AdminPanel() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [totalDeads, setTotalDeads] = useState("")
   const [totalDeadsGovernorId, setTotalDeadsGovernorId] = useState("")
+  const [kpiReductionGovernorId, setKpiReductionGovernorId] = useState("")
+  const [kpiReductionPercentage, setKpiReductionPercentage] = useState("")
+  const [kpiReductionReason, setKpiReductionReason] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [playerData, setPlayerData] = useState<PlayerData[]>([])
+  const [playerStatus, setPlayerStatus] = useState<PlayerStatus[]>([])
+  const [searchId, setSearchId] = useState("")
 
   const subTabs = [
     {
@@ -104,6 +138,11 @@ export function AdminPanel() {
       id: "manageDeads",
       label: "Quản lý Total Deads",
       icon: <Swords className="h-4 w-4" />,
+    },
+    {
+      id: "kpi-reduction",
+      label: "Giảm KPI",
+      icon: <Percent className="h-4 w-4" />,
     },
   ]
 
@@ -423,291 +462,409 @@ export function AdminPanel() {
     }
   }
 
+  const handleKpiReduction = async () => {
+    if (!kpiReductionGovernorId || !kpiReductionPercentage) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng điền đầy đủ thông tin",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUpdating(true)
+
+    try {
+      // Lấy dữ liệu người chơi từ phase dataStart
+      const { data: startData, error: startError } = await supabase
+        .from("player_data")
+        .select("*")
+        .eq("governor_id", kpiReductionGovernorId)
+        .eq("phase", "dataStart")
+        .single()
+
+      if (startError) throw startError
+
+      if (!startData) {
+        toast({
+          title: "Lỗi",
+          description: "Không tìm thấy dữ liệu người chơi",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Lưu thông tin giảm KPI vào bảng kpi_reductions
+      const { error: reductionError } = await supabase
+        .from("kpi_reductions")
+        .insert({
+          governor_id: kpiReductionGovernorId,
+          governor_name: startData.governor_name,
+          reduction_percentage: parseFloat(kpiReductionPercentage),
+          reason: "Admin adjustment", // Lý do mặc định, chỉ admin biết
+          power_at_reduction: startData.power,
+          created_at: new Date().toISOString(),
+        })
+
+      if (reductionError) throw reductionError
+
+      toast({
+        title: "Thành công",
+        description: "Đã giảm KPI cho người chơi",
+        variant: "default",
+      })
+
+      // Reset form
+      setKpiReductionGovernorId("")
+      setKpiReductionPercentage("")
+    } catch (error) {
+      console.error("Error reducing KPI:", error)
+      toast({
+        title: "Lỗi",
+        description: "Không thể giảm KPI. Vui lòng thử lại.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <SubNavigation tabs={subTabs} activeTab={activeSubTab} setActiveTab={setActiveSubTab} />
+      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-4">
+        <SubNavigation tabs={subTabs} activeTab={activeSubTab} setActiveTab={setActiveSubTab} />
+      </div>
 
-      {activeSubTab === "uploadData" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Upload className="h-5 w-5 mr-2" />
-              {String(t("uploadData"))}
-            </CardTitle>
-            <CardDescription>{String(t("uploadDescription"))}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="phase" className="flex items-center">
-                  <Database className="h-4 w-4 mr-2" />
-                  {String(t("selectPhase"))}
-                </Label>
-                <Select value={selectedPhase} onValueChange={setSelectedPhase}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select phase" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dataStart">{String(t("dataStart"))}</SelectItem>
-                    <SelectItem value="dataPass4">{String(t("dataPass4"))}</SelectItem>
-                    <SelectItem value="dataPass7">{String(t("dataPass7"))}</SelectItem>
-                    <SelectItem value="dataKingland">{String(t("dataKingland"))}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      {loading ? (
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <>
+          {activeSubTab === "uploadData" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Upload className="h-5 w-5 mr-2" />
+                  {String(t("uploadData"))}
+                </CardTitle>
+                <CardDescription>{String(t("uploadDescription"))}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="phase" className="flex items-center">
+                      <Database className="h-4 w-4 mr-2" />
+                      {String(t("selectPhase"))}
+                    </Label>
+                    <Select value={selectedPhase} onValueChange={setSelectedPhase}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select phase" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dataStart">{String(t("dataStart"))}</SelectItem>
+                        <SelectItem value="dataPass4">{String(t("dataPass4"))}</SelectItem>
+                        <SelectItem value="dataPass7">{String(t("dataPass7"))}</SelectItem>
+                        <SelectItem value="dataKingland">{String(t("dataKingland"))}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="file" className="flex items-center">
-                  <FileText className="h-4 w-4 mr-2" />
-                  {String(t("selectFile"))}
-                </Label>
-                <Input id="file" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} disabled={isUploading} />
-                <p className="text-xs text-gray-500 flex items-center">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  File must be an Excel file with columns: Governor ID, Governor Name, Power, Kill Points, Deads, T1-T5
-                  Kills
-                </p>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button disabled={isUploading} className="ml-auto">
-              {isUploading ? (
-                <>
-                  <span className="animate-spin mr-2">
-                    <Upload className="h-4 w-4" />
-                  </span>
-                  {String(t("uploading"))}
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  {String(t("readyToUpload"))}
-                </>
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
+                  <div className="grid gap-2">
+                    <Label htmlFor="file" className="flex items-center">
+                      <FileText className="h-4 w-4 mr-2" />
+                      {String(t("selectFile"))}
+                    </Label>
+                    <Input id="file" type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} disabled={isUploading} />
+                    <p className="text-xs text-gray-500 flex items-center">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      File must be an Excel file with columns: Governor ID, Governor Name, Power, Kill Points, Deads, T1-T5
+                      Kills
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button disabled={isUploading} className="ml-auto">
+                  {isUploading ? (
+                    <>
+                      <span className="animate-spin mr-2">
+                        <Upload className="h-4 w-4" />
+                      </span>
+                      {String(t("uploading"))}
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      {String(t("readyToUpload"))}
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
 
-      {activeSubTab === "manageUsers" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <UserCheck className="h-5 w-5 mr-2" />
-              {String(t("manageUsers"))}
-            </CardTitle>
-            <CardDescription>Quản lý trạng thái người chơi</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="governorId" className="flex items-center">
-                  <Database className="h-4 w-4 mr-2" />
-                  {String(t("governorId"))}
-                </Label>
-                <Input
-                  id="governorId"
-                  value={governorId}
-                  onChange={(e) => setGovernorId(e.target.value)}
-                  placeholder="Nhập ID Thống đốc"
-                />
-              </div>
+          {activeSubTab === "manageUsers" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <UserCheck className="h-5 w-5 mr-2" />
+                  {String(t("manageUsers"))}
+                </CardTitle>
+                <CardDescription>Quản lý trạng thái người chơi</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="governorId" className="flex items-center">
+                      <Database className="h-4 w-4 mr-2" />
+                      {String(t("governorId"))}
+                    </Label>
+                    <Input
+                      id="governorId"
+                      value={governorId}
+                      onChange={(e) => setGovernorId(e.target.value)}
+                      placeholder="Nhập ID Thống đốc"
+                    />
+                  </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="governorName" className="flex items-center">
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Tên Thống đốc (Tùy chọn)
-                </Label>
-                <Input
-                  id="governorName"
-                  value={governorName}
-                  onChange={(e) => setGovernorName(e.target.value)}
-                  placeholder="Nhập tên Thống đốc"
-                />
-              </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="governorName" className="flex items-center">
+                      <UserCheck className="h-4 w-4 mr-2" />
+                      Tên Thống đốc (Tùy chọn)
+                    </Label>
+                    <Input
+                      id="governorName"
+                      value={governorName}
+                      onChange={(e) => setGovernorName(e.target.value)}
+                      placeholder="Nhập tên Thống đốc"
+                    />
+                  </div>
 
-              <div className="grid gap-2">
-                <Label className="flex items-center">
-                  <Shield className="h-4 w-4 mr-2" />
-                  {String(t("status"))}
-                </Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant={onLeave ? "default" : "outline"}
-                    onClick={() => setOnLeave(!onLeave)}
-                    className="w-full"
-                  >
-                    <UserMinus className="h-4 w-4 mr-2" />
-                    {String(t("onLeave"))}
-                  </Button>
-                  <Button
-                    variant={zeroed ? "default" : "outline"}
-                    onClick={() => setZeroed(!zeroed)}
-                    className="w-full"
-                  >
-                    <Swords className="h-4 w-4 mr-2" />
-                    {String(t("zeroed"))}
-                  </Button>
-                  <Button
-                    variant={farmAccount ? "default" : "outline"}
-                    onClick={() => setFarmAccount(!farmAccount)}
-                    className="w-full"
-                  >
-                    <Farm className="h-4 w-4 mr-2" />
-                    {String(t("farmAccount"))}
-                  </Button>
-                  <Button
-                    variant={blacklisted ? "destructive" : "outline"}
-                    onClick={() => setBlacklisted(!blacklisted)}
-                    className="w-full"
-                  >
-                    <Shield className="h-4 w-4 mr-2" />
-                    {String(t("blacklisted"))}
+                  <div className="grid gap-2">
+                    <Label className="flex items-center">
+                      <Shield className="h-4 w-4 mr-2" />
+                      {String(t("status"))}
+                    </Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button
+                        variant={onLeave ? "default" : "outline"}
+                        onClick={() => setOnLeave(!onLeave)}
+                        className="w-full"
+                      >
+                        <UserMinus className="h-4 w-4 mr-2" />
+                        {String(t("onLeave"))}
+                      </Button>
+                      <Button
+                        variant={zeroed ? "default" : "outline"}
+                        onClick={() => setZeroed(!zeroed)}
+                        className="w-full"
+                      >
+                        <Swords className="h-4 w-4 mr-2" />
+                        {String(t("zeroed"))}
+                      </Button>
+                      <Button
+                        variant={farmAccount ? "default" : "outline"}
+                        onClick={() => setFarmAccount(!farmAccount)}
+                        className="w-full"
+                      >
+                        <Farm className="h-4 w-4 mr-2" />
+                        {String(t("farmAccount"))}
+                      </Button>
+                      <Button
+                        variant={blacklisted ? "destructive" : "outline"}
+                        onClick={() => setBlacklisted(!blacklisted)}
+                        className="w-full"
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        {String(t("blacklisted"))}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button onClick={handlePlayerStatusUpdate} disabled={isUpdating} className="w-full">
+                    {isUpdating ? (
+                      <>
+                        <span className="animate-spin mr-2">
+                          <Save className="h-4 w-4" />
+                        </span>
+                        {String(t("updating"))}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        {String(t("updateStatus"))}
+                      </>
+                    )}
                   </Button>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          )}
 
-              <Button onClick={handlePlayerStatusUpdate} disabled={isUpdating} className="w-full">
-                {isUpdating ? (
-                  <>
-                    <span className="animate-spin mr-2">
-                      <Save className="h-4 w-4" />
-                    </span>
-                    {String(t("updating"))}
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    {String(t("updateStatus"))}
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          {activeSubTab === "manageDeads" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Quản lý Total Deads</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="totalDeadsFile" className="flex items-center">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Upload file Excel
+                      </Label>
+                      <Input 
+                        id="totalDeadsFile" 
+                        type="file" 
+                        accept=".xlsx,.xls,.csv" 
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
 
-      {activeSubTab === "manageDeads" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Quản lý Total Deads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="totalDeadsFile" className="flex items-center">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Upload file Excel
-                  </Label>
-                  <Input 
-                    id="totalDeadsFile" 
-                    type="file" 
-                    accept=".xlsx,.xls,.csv" 
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0]
-                      if (!file) return
+                          setIsUploading(true)
 
-                      setIsUploading(true)
-
-                      try {
-                        const reader = new FileReader()
-                        reader.onload = async (e) => {
                           try {
-                            const data = new Uint8Array(e.target?.result as ArrayBuffer)
-                            const workbook = XLSX.read(data, { type: "array" })
-                            const worksheetName = workbook.SheetNames[0]
-                            const worksheet = workbook.Sheets[worksheetName]
-                            const jsonData = XLSX.utils.sheet_to_json(worksheet) as { "Governor ID": string, "Total Deads": number }[]
+                            const reader = new FileReader()
+                            reader.onload = async (e) => {
+                              try {
+                                const data = new Uint8Array(e.target?.result as ArrayBuffer)
+                                const workbook = XLSX.read(data, { type: "array" })
+                                const worksheetName = workbook.SheetNames[0]
+                                const worksheet = workbook.Sheets[worksheetName]
+                                const jsonData = XLSX.utils.sheet_to_json(worksheet) as { "Governor ID": string, "Total Deads": number }[]
 
-                            // Validate data format
-                            if (!Array.isArray(jsonData) || jsonData.length === 0) {
-                              throw new Error("Invalid data format")
-                            }
+                                // Validate data format
+                                if (!Array.isArray(jsonData) || jsonData.length === 0) {
+                                  throw new Error("Invalid data format")
+                                }
 
-                            // Update total_deads for each player
-                            for (const row of jsonData) {
-                              if (!row["Governor ID"] || !row["Total Deads"]) {
-                                continue
+                                // Update total_deads for each player
+                                for (const row of jsonData) {
+                                  if (!row["Governor ID"] || !row["Total Deads"]) {
+                                    continue
+                                  }
+
+                                  await supabase
+                                    .from("player_data")
+                                    .update({ total_deads: row["Total Deads"] })
+                                    .eq("governor_id", row["Governor ID"])
+                                    .eq("phase", "dataKingland")
+                                }
+
+                                toast({
+                                  title: "Success",
+                                  description: "Total deads updated successfully",
+                                  variant: "default",
+                                })
+
+                              } catch (error) {
+                                console.error("Error processing file:", error)
+                                toast({
+                                  title: "Error",
+                                  description: "Error processing Excel file. Please check the format.",
+                                  variant: "destructive",
+                                })
                               }
-
-                              await supabase
-                                .from("player_data")
-                                .update({ total_deads: row["Total Deads"] })
-                                .eq("governor_id", row["Governor ID"])
-                                .eq("phase", "dataKingland")
                             }
-
-                            toast({
-                              title: "Success",
-                              description: "Total deads updated successfully",
-                              variant: "default",
-                            })
-
+                            reader.readAsArrayBuffer(file)
                           } catch (error) {
-                            console.error("Error processing file:", error)
+                            console.error("Error reading file:", error)
                             toast({
                               title: "Error",
-                              description: "Error processing Excel file. Please check the format.",
+                              description: "Error reading Excel file.",
                               variant: "destructive",
                             })
+                          } finally {
+                            setIsUploading(false)
                           }
-                        }
-                        reader.readAsArrayBuffer(file)
-                      } catch (error) {
-                        console.error("Error reading file:", error)
-                        toast({
-                          title: "Error",
-                          description: "Error reading Excel file.",
-                          variant: "destructive",
-                        })
-                      } finally {
-                        setIsUploading(false)
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 flex items-center">
-                    <AlertCircle className="h-3 w-3 mr-1" />
-                    File Excel phải có 2 cột: Governor ID và Total Deads
-                  </p>
-                </div>
-              </div>
+                        }}
+                      />
+                      <p className="text-xs text-gray-500 flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        File Excel phải có 2 cột: Governor ID và Total Deads
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label>Hoặc cập nhật thủ công:</Label>
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label>Hoặc cập nhật thủ công:</Label>
+                    </div>
+                    <form onSubmit={(e) => { e.preventDefault(); handleTotalDeadsUpdate(); }} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="totalDeadsGovernorId">Governor ID</Label>
+                        <Input
+                          id="totalDeadsGovernorId"
+                          value={totalDeadsGovernorId}
+                          onChange={(e) => setTotalDeadsGovernorId(e.target.value)}
+                          placeholder="Nhập Governor ID"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="totalDeads">Total Deads</Label>
+                        <Input
+                          id="totalDeads"
+                          type="number"
+                          value={totalDeads}
+                          onChange={(e) => setTotalDeads(e.target.value)}
+                          placeholder="Nhập số deads"
+                          required
+                        />
+                      </div>
+                      <Button type="submit" disabled={isUpdating}>
+                        {isUpdating ? "Đang cập nhật..." : "Cập nhật"}
+                      </Button>
+                    </form>
+                  </div>
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); handleTotalDeadsUpdate(); }} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="totalDeadsGovernorId">Governor ID</Label>
-                    <Input
-                      id="totalDeadsGovernorId"
-                      value={totalDeadsGovernorId}
-                      onChange={(e) => setTotalDeadsGovernorId(e.target.value)}
-                      placeholder="Nhập Governor ID"
-                      required
-                    />
+              </CardContent>
+            </Card>
+          )}
+
+          {activeSubTab === "kpi-reduction" && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label>Giảm KPI cho người chơi</Label>
+                    <p className="text-sm text-gray-500">
+                      Chức năng này cho phép giảm KPI cho người chơi được chọn. KPI sẽ được tính dựa trên dữ liệu ban đầu từ phase dataStart.
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="totalDeads">Total Deads</Label>
-                    <Input
-                      id="totalDeads"
-                      type="number"
-                      value={totalDeads}
-                      onChange={(e) => setTotalDeads(e.target.value)}
-                      placeholder="Nhập số deads"
-                      required
-                    />
-                  </div>
-                  <Button type="submit" disabled={isUpdating}>
-                    {isUpdating ? "Đang cập nhật..." : "Cập nhật"}
-                  </Button>
-                </form>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  <form onSubmit={(e) => { e.preventDefault(); handleKpiReduction(); }} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="kpiReductionGovernorId">Governor ID</Label>
+                      <Input
+                        id="kpiReductionGovernorId"
+                        value={kpiReductionGovernorId}
+                        onChange={(e) => setKpiReductionGovernorId(e.target.value)}
+                        placeholder="Nhập Governor ID"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="kpiReductionPercentage">Phần trăm giảm KPI</Label>
+                      <Input
+                        id="kpiReductionPercentage"
+                        type="number"
+                        value={kpiReductionPercentage}
+                        onChange={(e) => setKpiReductionPercentage(e.target.value)}
+                        placeholder="Nhập phần trăm giảm (ví dụ: 20)"
+                        required
+                      />
+                    </div>
+                    <Button type="submit" disabled={isUpdating}>
+                      {isUpdating ? "Đang cập nhật..." : "Giảm KPI"}
+                    </Button>
+                  </form>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   )
