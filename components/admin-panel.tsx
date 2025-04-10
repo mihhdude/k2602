@@ -116,13 +116,11 @@ export function AdminPanel({ activeTab }: AdminPanelProps) {
       label: "Quản lý Total Deads",
       icon: <Swords className="h-4 w-4" />,
     },
-    ...(isAdmin ? [
-      {
-        id: "manageKpiReductions",
-        label: "Quản lý giảm KPI",
-        icon: <Swords className="h-4 w-4" />,
-      }
-    ] : []),
+    {
+      id: "manageKpiReductions",
+      label: "Quản lý giảm KPI",
+      icon: <Swords className="h-4 w-4" />,
+    }
   ]
 
   // Handle Excel file upload
