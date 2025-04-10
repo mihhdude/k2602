@@ -146,6 +146,23 @@ export function AdminPanel() {
     },
   ]
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Giả sử có một hàm để tải dữ liệu cần thiết
+        const { data, error } = await supabase.from("player_data").select("*")
+        if (error) throw error
+        setPlayerData(data || [])
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
   // Handle Excel file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
