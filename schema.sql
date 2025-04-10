@@ -39,10 +39,22 @@ CREATE TABLE IF NOT EXISTS events (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create kpi_reductions table to track KPI reductions
+CREATE TABLE IF NOT EXISTS kpi_reductions (
+  id SERIAL PRIMARY KEY,
+  governor_id VARCHAR(50) NOT NULL,
+  governor_name VARCHAR(100) NOT NULL,
+  reduction_percentage DECIMAL(5,2) NOT NULL,
+  reason TEXT,
+  power_at_reduction BIGINT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_player_data_governor_id ON player_data(governor_id);
 CREATE INDEX IF NOT EXISTS idx_player_data_phase ON player_data(phase);
 CREATE INDEX IF NOT EXISTS idx_player_status_governor_id ON player_status(governor_id);
+CREATE INDEX IF NOT EXISTS idx_kpi_reductions_governor_id ON kpi_reductions(governor_id);
 
 -- Thêm cột total_deads vào bảng player_data
 ALTER TABLE player_data
