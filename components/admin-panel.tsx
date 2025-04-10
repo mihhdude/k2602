@@ -552,6 +552,14 @@ export function AdminPanel() {
         return
       }
 
+      // Tính toán KPI ban đầu sau khi giảm
+      const reductionFactor = 1 - (parseFloat(kpiReductionPercentage) / 100)
+      const initialKpi = {
+        power: startData.power * reductionFactor,
+        kill_points: startData.kill_points * reductionFactor,
+        deads: startData.deads * reductionFactor
+      }
+
       // Lưu thông tin giảm KPI vào bảng kpi_reductions
       const { error: reductionError } = await supabase
         .from("kpi_reductions")
@@ -559,8 +567,9 @@ export function AdminPanel() {
           governor_id: kpiReductionGovernorId,
           governor_name: startData.governor_name,
           reduction_percentage: parseFloat(kpiReductionPercentage),
-          reason: kpiReductionReason || "Admin adjustment", // Sử dụng lý do người dùng nhập hoặc mặc định
+          reason: kpiReductionReason || "Admin adjustment",
           power_at_reduction: startData.power,
+          initial_kpi: initialKpi,
           created_at: new Date().toISOString(),
         })
 
@@ -568,7 +577,7 @@ export function AdminPanel() {
 
       toast({
         title: "Thành công",
-        description: "Đã giảm KPI cho người chơi",
+        description: "Đã giảm KPI ban đầu cho người chơi",
         variant: "default",
       })
 
