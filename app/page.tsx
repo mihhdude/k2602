@@ -38,7 +38,7 @@ export default function Home() {
         {activeTab === "hall" && <HallOfFame />}
         {activeTab === "events" && <Events />}
         {activeTab === "more" && <More />}
-        {isAdmin && activeTab === "admin" && <AdminPanel />}
+        {isAdmin && activeTab === "admin" && <AdminPanel activeTab={activeTab} />}
       </div>
     </div>
   )
