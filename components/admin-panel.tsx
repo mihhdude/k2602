@@ -48,23 +48,29 @@ interface ExcelRow {
   "Kill Points"?: string | number;
   "kill_points"?: string | number;
   "KillPoints"?: string | number;
+  "Dead"?: string | number;
   "Deads"?: string | number;
   "deads"?: string | number;
-  "Tier 1 Kills"?: string | number;
-  "t1_kills"?: string | number;
+  "Kill T1"?: string | number;
+  "Kill T2"?: string | number;
+  "Kill T3"?: string | number;
+  "Kill T4"?: string | number;
+  "Kill T5"?: string | number;
   "T1 Kills"?: string | number;
-  "Tier 2 Kills"?: string | number;
-  "t2_kills"?: string | number;
   "T2 Kills"?: string | number;
-  "Tier 3 Kills"?: string | number;
-  "t3_kills"?: string | number;
   "T3 Kills"?: string | number;
-  "Tier 4 Kills"?: string | number;
-  "t4_kills"?: string | number;
   "T4 Kills"?: string | number;
-  "Tier 5 Kills"?: string | number;
-  "t5_kills"?: string | number;
   "T5 Kills"?: string | number;
+  "Tier 1 Kills"?: string | number;
+  "Tier 2 Kills"?: string | number;
+  "Tier 3 Kills"?: string | number;
+  "Tier 4 Kills"?: string | number;
+  "Tier 5 Kills"?: string | number;
+  "t1_kills"?: string | number;
+  "t2_kills"?: string | number;
+  "t3_kills"?: string | number;
+  "t4_kills"?: string | number;
+  "t5_kills"?: string | number;
 }
 
 export function AdminPanel() {
@@ -136,19 +142,23 @@ export function AdminPanel() {
           }
 
           // Map Excel columns to database fields
-          const mappedData = jsonData.map((row: ExcelRow) => ({
-            governor_id: row["Governor ID"] || row["governor_id"] || row["ID"] || "",
-            governor_name: row["Governor Name"] || row["governor_name"] || row["Name"] || "",
-            power: Number(row["Power"] || row["power"] || 0),
-            kill_points: Number(row["Kill Points"] || row["kill_points"] || row["KillPoints"] || 0),
-            deads: Number(row["Deads"] || row["deads"] || 0),
-            t1_kills: Number(row["T1 Kills"] || row["Tier 1 Kills"] || row["t1_kills"] || 0),
-            t2_kills: Number(row["T2 Kills"] || row["Tier 2 Kills"] || row["t2_kills"] || 0),
-            t3_kills: Number(row["T3 Kills"] || row["Tier 3 Kills"] || row["t3_kills"] || 0),
-            t4_kills: Number(row["T4 Kills"] || row["Tier 4 Kills"] || row["t4_kills"] || 0),
-            t5_kills: Number(row["T5 Kills"] || row["Tier 5 Kills"] || row["t5_kills"] || 0),
-            phase: selectedPhase,
-          }))
+          const mappedData = jsonData.map((row: ExcelRow) => {
+            const data = {
+              governor_id: row["Governor ID"] || row["governor_id"] || row["ID"] || "",
+              governor_name: row["Governor Name"] || row["governor_name"] || row["Name"] || "",
+              power: Number(row["Power"] || row["power"] || 0),
+              kill_points: Number(row["Kill Points"] || row["kill_points"] || row["KillPoints"] || 0),
+              deads: Number(row["Dead"] || row["Deads"] || row["deads"] || 0),
+              t1_kills: Number(row["Kill T1"] || row["T1 Kills"] || row["Tier 1 Kills"] || row["t1_kills"] || 0),
+              t2_kills: Number(row["Kill T2"] || row["T2 Kills"] || row["Tier 2 Kills"] || row["t2_kills"] || 0),
+              t3_kills: Number(row["Kill T3"] || row["T3 Kills"] || row["Tier 3 Kills"] || row["t3_kills"] || 0),
+              t4_kills: Number(row["Kill T4"] || row["T4 Kills"] || row["Tier 4 Kills"] || row["t4_kills"] || 0),
+              t5_kills: Number(row["Kill T5"] || row["T5 Kills"] || row["Tier 5 Kills"] || row["t5_kills"] || 0),
+              phase: selectedPhase,
+            }
+            console.log("Mapped data for row:", data)
+            return data
+          })
 
           // Validate required fields
           const invalidData = mappedData.some(
