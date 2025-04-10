@@ -35,6 +35,14 @@ export function DataTable({ data, isLoading }: DataTableProps) {
   const itemsPerPage = 50
   const totalPages = Math.ceil(data.length / itemsPerPage)
 
+  // Thêm hàm formatNumber để định dạng số liệu đồng nhất
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(num)
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -124,14 +132,14 @@ export function DataTable({ data, isLoading }: DataTableProps) {
                 <TableCell>{startIndex + index + 1}</TableCell>
                 <TableCell>{row.name}</TableCell>
                 <TableCell>{row.id}</TableCell>
-                <TableCell className="text-right">{row.power.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{row.killPoints.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{row.deads.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{row.t1Kills.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{row.t2Kills.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{row.t3Kills.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{row.t4Kills.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{row.t5Kills.toLocaleString()}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.power)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.killPoints)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.deads)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t1Kills)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t2Kills)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t3Kills)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t4Kills)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t5Kills)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
