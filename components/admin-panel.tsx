@@ -29,8 +29,6 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@supabase/supabase-js"
 import * as XLSX from "xlsx"
-import { KpiReductions } from "./kpi-reductions"
-import { useSession } from "@/hooks/use-session"
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
@@ -75,15 +73,9 @@ interface ExcelRow {
   "t5_kills"?: string | number;
 }
 
-interface AdminPanelProps {
-  activeTab: string
-}
-
-export function AdminPanel({ activeTab }: AdminPanelProps) {
+export function AdminPanel() {
   const { t } = useLanguage()
   const { toast } = useToast()
-  const { session } = useSession()
-  const isAdmin = session?.user?.user_metadata?.role === "admin"
   const [activeSubTab, setActiveSubTab] = useState("uploadData")
   const [selectedPhase, setSelectedPhase] = useState("dataStart")
   const [governorId, setGovernorId] = useState("")
@@ -96,9 +88,6 @@ export function AdminPanel({ activeTab }: AdminPanelProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [totalDeads, setTotalDeads] = useState("")
   const [totalDeadsGovernorId, setTotalDeadsGovernorId] = useState("")
-  const [kpiReductionGovernorId, setKpiReductionGovernorId] = useState("")
-  const [kpiReductionPercentage, setKpiReductionPercentage] = useState("")
-  const [kpiReductionReason, setKpiReductionReason] = useState("")
 
   const subTabs = [
     {
@@ -116,11 +105,6 @@ export function AdminPanel({ activeTab }: AdminPanelProps) {
       label: "Quản lý Total Deads",
       icon: <Swords className="h-4 w-4" />,
     },
-    {
-      id: "manageKpiReductions",
-      label: "Quản lý giảm KPI",
-      icon: <Swords className="h-4 w-4" />,
-    }
   ]
 
   // Handle Excel file upload
@@ -439,81 +423,6 @@ export function AdminPanel({ activeTab }: AdminPanelProps) {
     }
   }
 
-  // Handle KPI reduction
-  const handleKpiReduction = async () => {
-    if (!kpiReductionGovernorId || !kpiReductionPercentage) {
-      toast({
-        title: "Error",
-        description: "Vui lòng nhập ID người chơi và phần trăm giảm KPI",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const percentage = parseFloat(kpiReductionPercentage)
-    if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
-      toast({
-        title: "Error",
-        description: "Phần trăm giảm KPI phải là số hợp lệ từ 0 đến 100",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsUpdating(true)
-
-    try {
-      // First check if player exists
-      const { data: existingPlayer, error: checkError } = await supabase
-        .from("player_data")
-        .select("governor_id, governor_name, power")
-        .eq("governor_id", kpiReductionGovernorId)
-        .eq("phase", "dataStart")
-        .single()
-
-      if (checkError) {
-        console.error("Check error:", checkError)
-        throw new Error(`Không tìm thấy người chơi: ${checkError.message}`)
-      }
-
-      // Add KPI reduction record
-      const { error: insertError } = await supabase
-        .from("kpi_reductions")
-        .insert({
-          governor_id: kpiReductionGovernorId,
-          governor_name: existingPlayer.governor_name,
-          reduction_percentage: percentage,
-          reason: kpiReductionReason,
-          power_at_reduction: existingPlayer.power
-        })
-
-      if (insertError) {
-        throw new Error(`Lỗi khi thêm giảm KPI: ${insertError.message}`)
-      }
-
-      toast({
-        title: "Thành công",
-        description: "Đã thêm giảm KPI cho người chơi",
-        variant: "default",
-      })
-
-      // Reset form
-      setKpiReductionGovernorId("")
-      setKpiReductionPercentage("")
-      setKpiReductionReason("")
-
-    } catch (error) {
-      console.error("Error:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Có lỗi xảy ra",
-        variant: "destructive",
-      })
-    } finally {
-      setIsUpdating(false)
-    }
-  }
-
   return (
     <div className="space-y-4">
       <SubNavigation tabs={subTabs} activeTab={activeSubTab} setActiveTab={setActiveSubTab} />
@@ -799,65 +708,6 @@ export function AdminPanel({ activeTab }: AdminPanelProps) {
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {activeSubTab === "manageKpiReductions" && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Thêm giảm KPI</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label>ID người chơi</Label>
-                  <Input
-                    value={kpiReductionGovernorId}
-                    onChange={(e) => setKpiReductionGovernorId(e.target.value)}
-                    placeholder="Nhập ID người chơi"
-                  />
-                </div>
-                <div>
-                  <Label>Phần trăm giảm KPI</Label>
-                  <Input
-                    value={kpiReductionPercentage}
-                    onChange={(e) => setKpiReductionPercentage(e.target.value)}
-                    placeholder="Nhập phần trăm giảm (0-100)"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <Label>Lý do giảm KPI</Label>
-                  <Input
-                    value={kpiReductionReason}
-                    onChange={(e) => setKpiReductionReason(e.target.value)}
-                    placeholder="Nhập lý do giảm KPI"
-                  />
-                </div>
-                <Button onClick={handleKpiReduction} disabled={isUpdating} className="w-full">
-                  {isUpdating ? (
-                    <>
-                      <span className="animate-spin mr-2">
-                        <Save className="h-4 w-4" />
-                      </span>
-                      Đang cập nhật...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Thêm giảm KPI
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <KpiReductions />
-        </div>
       )}
     </div>
   )

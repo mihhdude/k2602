@@ -112,9 +112,6 @@ export function HallOfFame() {
       // Get all phases data
       const { data: startData } = await supabase.from("player_data").select("*").eq("phase", "dataStart")
 
-      // Get KPI reductions
-      const { data: kpiReductions } = await supabase.from("kpi_reductions").select("*")
-
       if (!startData || !playerStatuses) {
         setResultsData([])
         setLoading(false)
@@ -176,32 +173,21 @@ export function HallOfFame() {
         const kpPercentage = (totalKp / kpTarget) * 100
         const deadsPercentage = kinglandPlayer?.total_deads ? (kinglandPlayer.total_deads / deadsTarget) * 100 : 0
 
-        // Check if player has KPI reduction
-        const reduction = kpiReductions?.find(r => r.governor_id === startPlayer.governor_id)
-        let reductionPercentage = 0
-        if (reduction) {
-          reductionPercentage = reduction.reduction_percentage
-        }
-
-        // Apply KPI reduction if exists
-        const adjustedKpPercentage = kpPercentage * (1 - reductionPercentage / 100)
-        const adjustedDeadsPercentage = deadsPercentage * (1 - reductionPercentage / 100)
-
-        // Total KPI percentage is sum of adjusted KP percentage and adjusted Dead percentage
-        const kpiPercentage = adjustedKpPercentage + adjustedDeadsPercentage
+        // Total KPI percentage is sum of KP percentage and Dead percentage
+        const kpiPercentage = kpPercentage + deadsPercentage
 
         // Kiểm tra điều kiện đạt KPI
-        const isKpiAchieved = adjustedKpPercentage >= 50 && kpiPercentage >= 200
+        const isKpiAchieved = kpPercentage >= 50 && kpiPercentage >= 200
 
         totalResults.push({
           governor_id: startPlayer.governor_id,
           governor_name: startPlayer.governor_name,
           kp_increase: totalKp,
           kpi_percentage: kpiPercentage,
-          kp_percentage: adjustedKpPercentage,
+          kp_percentage: kpPercentage,
           kp_target: kpTarget,
           total_deads: kinglandPlayer?.total_deads || 0,
-          deads_percentage: adjustedDeadsPercentage,
+          deads_percentage: deadsPercentage,
           deads_target: deadsTarget,
           is_kpi_achieved: isKpiAchieved
         })
