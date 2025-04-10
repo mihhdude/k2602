@@ -552,13 +552,20 @@ export function AdminPanel() {
         return
       }
 
-      // Tính toán KPI ban đầu sau khi giảm
-      const reductionFactor = 1 - (parseFloat(kpiReductionPercentage) / 100)
-      const initialKpi = {
-        power: startData.power * reductionFactor,
-        kill_points: startData.kill_points * reductionFactor,
-        deads: startData.deads * reductionFactor
-      }
+      // Xác định KPI Dead ban đầu dựa trên Power
+      let initialKpiDead = 0;
+      if (startData.power >= 100000000) initialKpiDead = 1500000;
+      else if (startData.power >= 90000000) initialKpiDead = 1100000;
+      else if (startData.power >= 80000000) initialKpiDead = 850000;
+      else if (startData.power >= 70000000) initialKpiDead = 700000;
+      else if (startData.power >= 60000000) initialKpiDead = 600000;
+      else if (startData.power >= 50000000) initialKpiDead = 500000;
+      else if (startData.power >= 40000000) initialKpiDead = 400000;
+      else if (startData.power >= 30000000) initialKpiDead = 300000;
+      else if (startData.power >= 20000000) initialKpiDead = 200000;
+
+      // Tính toán Dead sau khi giảm
+      const reducedDeads = initialKpiDead * (parseFloat(kpiReductionPercentage) / 100);
 
       // Lưu thông tin giảm KPI vào bảng kpi_reductions
       const { error: reductionError } = await supabase
@@ -566,10 +573,11 @@ export function AdminPanel() {
         .insert({
           governor_id: kpiReductionGovernorId,
           governor_name: startData.governor_name,
-          reduction_percentage: parseFloat(kpiReductionPercentage),
           reason: kpiReductionReason || "Admin adjustment",
           power_at_reduction: startData.power,
-          initial_kpi: initialKpi,
+          initial_kpi: {
+            deads: reducedDeads
+          },
           created_at: new Date().toISOString(),
         })
 
