@@ -142,11 +142,11 @@ export function AdminPanel() {
             power: Number(row["Power"] || row["power"] || 0),
             kill_points: Number(row["Kill Points"] || row["kill_points"] || row["KillPoints"] || 0),
             deads: Number(row["Deads"] || row["deads"] || 0),
-            t1_kills: Number(row["Tier 1 Kills"] || row["t1_kills"] || row["T1 Kills"] || 0),
-            t2_kills: Number(row["Tier 2 Kills"] || row["t2_kills"] || row["T2 Kills"] || 0),
-            t3_kills: Number(row["Tier 3 Kills"] || row["t3_kills"] || row["T3 Kills"] || 0),
-            t4_kills: Number(row["Tier 4 Kills"] || row["t4_kills"] || row["T4 Kills"] || 0),
-            t5_kills: Number(row["Tier 5 Kills"] || row["t5_kills"] || row["T5 Kills"] || 0),
+            t1_kills: Number(row["T1 Kills"] || row["Tier 1 Kills"] || row["t1_kills"] || 0),
+            t2_kills: Number(row["T2 Kills"] || row["Tier 2 Kills"] || row["t2_kills"] || 0),
+            t3_kills: Number(row["T3 Kills"] || row["Tier 3 Kills"] || row["t3_kills"] || 0),
+            t4_kills: Number(row["T4 Kills"] || row["Tier 4 Kills"] || row["t4_kills"] || 0),
+            t5_kills: Number(row["T5 Kills"] || row["Tier 5 Kills"] || row["t5_kills"] || 0),
             phase: selectedPhase,
           }))
 
@@ -157,7 +157,12 @@ export function AdminPanel() {
               !item.governor_name ||
               isNaN(item.power) ||
               isNaN(item.kill_points) ||
-              isNaN(item.deads),
+              isNaN(item.deads) ||
+              isNaN(item.t1_kills) ||
+              isNaN(item.t2_kills) ||
+              isNaN(item.t3_kills) ||
+              isNaN(item.t4_kills) ||
+              isNaN(item.t5_kills)
           )
 
           if (invalidData) {
@@ -579,32 +584,118 @@ export function AdminPanel() {
             <CardTitle>Quản lý Total Deads</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={(e) => { e.preventDefault(); handleTotalDeadsUpdate(); }} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="totalDeadsGovernorId">Governor ID</Label>
-                <Input
-                  id="totalDeadsGovernorId"
-                  value={totalDeadsGovernorId}
-                  onChange={(e) => setTotalDeadsGovernorId(e.target.value)}
-                  placeholder="Nhập Governor ID"
-                  required
-                />
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="totalDeadsFile" className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Upload file Excel
+                  </Label>
+                  <Input 
+                    id="totalDeadsFile" 
+                    type="file" 
+                    accept=".xlsx,.xls,.csv" 
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+
+                      setIsUploading(true)
+
+                      try {
+                        const reader = new FileReader()
+                        reader.onload = async (e) => {
+                          try {
+                            const data = new Uint8Array(e.target?.result as ArrayBuffer)
+                            const workbook = XLSX.read(data, { type: "array" })
+                            const worksheetName = workbook.SheetNames[0]
+                            const worksheet = workbook.Sheets[worksheetName]
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet) as { "Governor ID": string, "Total Deads": number }[]
+
+                            // Validate data format
+                            if (!Array.isArray(jsonData) || jsonData.length === 0) {
+                              throw new Error("Invalid data format")
+                            }
+
+                            // Update total_deads for each player
+                            for (const row of jsonData) {
+                              if (!row["Governor ID"] || !row["Total Deads"]) {
+                                continue
+                              }
+
+                              await supabase
+                                .from("player_data")
+                                .update({ total_deads: row["Total Deads"] })
+                                .eq("governor_id", row["Governor ID"])
+                                .eq("phase", "dataKingland")
+                            }
+
+                            toast({
+                              title: "Success",
+                              description: "Total deads updated successfully",
+                              variant: "default",
+                            })
+
+                          } catch (error) {
+                            console.error("Error processing file:", error)
+                            toast({
+                              title: "Error",
+                              description: "Error processing Excel file. Please check the format.",
+                              variant: "destructive",
+                            })
+                          }
+                        }
+                        reader.readAsArrayBuffer(file)
+                      } catch (error) {
+                        console.error("Error reading file:", error)
+                        toast({
+                          title: "Error",
+                          description: "Error reading Excel file.",
+                          variant: "destructive",
+                        })
+                      } finally {
+                        setIsUploading(false)
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-gray-500 flex items-center">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    File Excel phải có 2 cột: Governor ID và Total Deads
+                  </p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="totalDeads">Total Deads</Label>
-                <Input
-                  id="totalDeads"
-                  type="number"
-                  value={totalDeads}
-                  onChange={(e) => setTotalDeads(e.target.value)}
-                  placeholder="Nhập số deads"
-                  required
-                />
+
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label>Hoặc cập nhật thủ công:</Label>
+                </div>
+                <form onSubmit={(e) => { e.preventDefault(); handleTotalDeadsUpdate(); }} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="totalDeadsGovernorId">Governor ID</Label>
+                    <Input
+                      id="totalDeadsGovernorId"
+                      value={totalDeadsGovernorId}
+                      onChange={(e) => setTotalDeadsGovernorId(e.target.value)}
+                      placeholder="Nhập Governor ID"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="totalDeads">Total Deads</Label>
+                    <Input
+                      id="totalDeads"
+                      type="number"
+                      value={totalDeads}
+                      onChange={(e) => setTotalDeads(e.target.value)}
+                      placeholder="Nhập số deads"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" disabled={isUpdating}>
+                    {isUpdating ? "Đang cập nhật..." : "Cập nhật"}
+                  </Button>
+                </form>
               </div>
-              <Button type="submit" disabled={isUpdating}>
-                {isUpdating ? "Đang cập nhật..." : "Cập nhật"}
-              </Button>
-            </form>
+            </div>
           </CardContent>
         </Card>
       )}

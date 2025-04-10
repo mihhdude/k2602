@@ -690,7 +690,7 @@ export function HallOfFame() {
                             <span
                               className={cn(
                                 "font-bold",
-                                (row.kpi_percentage || 0) >= 50 ? "text-green-500" : "text-red-500"
+                                (row.kpi_percentage || 0) >= 200 ? "text-green-500" : "text-red-500"
                               )}
                             >
                               {(row.kpi_percentage || 0).toFixed(1)}%
@@ -743,7 +743,6 @@ export function HallOfFame() {
                       <TableHead className="text-right">KP Increase</TableHead>
                       <TableHead className="text-right">KPI KP</TableHead>
                       <TableHead className="text-right">KP %</TableHead>
-                      <TableHead className="text-right">KPI %</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -763,16 +762,6 @@ export function HallOfFame() {
                               )}
                             >
                               {(row.kp_percentage || 0).toFixed(1)}%
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <span
-                              className={cn(
-                                "font-bold",
-                                (row.kpi_percentage || 0) >= 50 ? "text-green-500" : "text-red-500"
-                              )}
-                            >
-                              {(row.kpi_percentage || 0).toFixed(1)}%
                             </span>
                           </TableCell>
                         </TableRow>

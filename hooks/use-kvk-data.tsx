@@ -49,6 +49,7 @@ interface RawPlayerData {
   t3_kills: number
   t4_kills: number
   t5_kills: number
+  phase: string
 }
 
 const dataTypeToPhase: { [key: string]: string } = {
@@ -80,14 +81,14 @@ export function useKvkData(dataType: string) {
           const formattedData: PlayerData[] = (playerData as RawPlayerData[]).map((player) => ({
             id: player.governor_id,
             name: player.governor_name,
-            power: player.power,
-            killPoints: player.kill_points,
-            deads: player.deads,
-            t1Kills: player.t1_kills,
-            t2Kills: player.t2_kills,
-            t3Kills: player.t3_kills,
-            t4Kills: player.t4_kills,
-            t5Kills: player.t5_kills,
+            power: player.power || 0,
+            killPoints: player.kill_points || 0,
+            deads: player.deads || 0,
+            t1Kills: player.t1_kills || 0,
+            t2Kills: player.t2_kills || 0,
+            t3Kills: player.t3_kills || 0,
+            t4Kills: player.t4_kills || 0,
+            t5Kills: player.t5_kills || 0,
           }))
           setData(formattedData)
         }
