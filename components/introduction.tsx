@@ -128,9 +128,9 @@ export function Introduction() {
                   <li>
                     <strong>{t("r4Officers") as string}</strong>
                   </li>
-                  <li>ᵛᶰCrazyDude - ID: 48387831 ({t("supportContact") as string})</li>
-                  <li>ᵛᶰ Gaara - ID: 55277161</li>
-                  <li>ᴮ Pink Cloud - ID: 72097985</li>
+                  <li>ᴵᵂ Dude - ID: 48387831 ({t("supportContact") as string})</li>
+                  <li>ᴵᵂ Gaara - ID: 55277161</li>
+                  <li>ᴵᵂ PinkCloud - ID: 72097985</li>
                 </ul>
               </div>
             </div>
