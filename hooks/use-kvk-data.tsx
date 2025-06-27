@@ -14,9 +14,6 @@ export interface PlayerData {
   power: number
   killPoints: number
   deads: number
-  t1Kills: number
-  t2Kills: number
-  t3Kills: number
   t4Kills: number
   t5Kills: number
 }
@@ -44,9 +41,6 @@ interface RawPlayerData {
   power: number
   kill_points: number
   deads: number
-  t1_kills: number
-  t2_kills: number
-  t3_kills: number
   t4_kills: number
   t5_kills: number
   phase: string
@@ -84,9 +78,6 @@ export function useKvkData(dataType: string) {
             power: player.power || 0,
             killPoints: player.kill_points || 0,
             deads: player.deads || 0,
-            t1Kills: player.t1_kills || 0,
-            t2Kills: player.t2_kills || 0,
-            t3Kills: player.t3_kills || 0,
             t4Kills: player.t4_kills || 0,
             t5Kills: player.t5_kills || 0,
           }))
