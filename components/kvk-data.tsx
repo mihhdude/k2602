@@ -11,9 +11,6 @@ interface PlayerData {
   power: number
   killPoints: number
   deads: number
-  t1Kills: number
-  t2Kills: number
-  t3Kills: number
   t4Kills: number
   t5Kills: number
 }
@@ -44,4 +41,3 @@ export function KvKData() {
     </div>
   )
 }
-
