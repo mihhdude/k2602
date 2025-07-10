@@ -18,6 +18,9 @@ interface PlayerData {
   power: number
   killPoints: number
   deads: number
+  t1Kills: number
+  t2Kills: number
+  t3Kills: number
   t4Kills: number
   t5Kills: number
 }
@@ -105,29 +108,37 @@ export function DataTable({ data, isLoading }: DataTableProps) {
           </Button>
         </div>
       </div>
-      <div className="overflow-x-auto">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
+              <TableHead className="w-12">STT</TableHead>
               <TableHead>Tên</TableHead>
-              <TableHead>Lực chiến</TableHead>
-              <TableHead>Kill Points</TableHead>
-              <TableHead>Deads</TableHead>
-              <TableHead>T4 Kills</TableHead>
-              <TableHead>T5 Kills</TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead className="text-right">Power</TableHead>
+              <TableHead className="text-right">Kill Points</TableHead>
+              <TableHead className="text-right">Deads</TableHead>
+              <TableHead className="text-right">T1 Kills</TableHead>
+              <TableHead className="text-right">T2 Kills</TableHead>
+              <TableHead className="text-right">T3 Kills</TableHead>
+              <TableHead className="text-right">T4 Kills</TableHead>
+              <TableHead className="text-right">T5 Kills</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displayData.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.id}</TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{formatNumber(item.power)}</TableCell>
-                <TableCell>{formatNumber(item.killPoints)}</TableCell>
-                <TableCell>{formatNumber(item.deads)}</TableCell>
-                <TableCell>{formatNumber(item.t4Kills)}</TableCell>
-                <TableCell>{formatNumber(item.t5Kills)}</TableCell>
+            {displayData.map((row, index) => (
+              <TableRow key={row.id} className={index % 2 === 0 ? "bg-muted/50" : ""}>
+                <TableCell>{startIndex + index + 1}</TableCell>
+                <TableCell>{row.name}</TableCell>
+                <TableCell>{row.id}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.power)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.killPoints)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.deads)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t1Kills)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t2Kills)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t3Kills)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t4Kills)}</TableCell>
+                <TableCell className="text-right">{formatNumber(row.t5Kills)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
